@@ -79,7 +79,7 @@
               </td>
               <td>
                 <div style="display: flex; gap: 0.4rem;">
-                  <a href="http://localhost:3000/tours/{{ dest.slug }}" target="_blank" class="btn btn-outline btn-sm" title="View page on website">↗</a>
+                  <a href="{{ app_base_url }}/tours/{{ dest.slug }}" target="_blank" class="btn btn-outline btn-sm" title="View page on website">↗</a>
                   <a href="{{ url_for('admin.edit_destination', dest_id=dest.id) }}" class="btn btn-primary btn-sm">Edit</a>
                   <form method="POST" action="{{ url_for('admin.delete_destination', dest_id=dest.id) }}" onsubmit="return confirm('Delete destination {{ dest.title }}?');" style="display: inline;">
                     <button type="submit" class="btn btn-outline btn-sm" style="color: #A63A2B;" title="Delete">✕</button>

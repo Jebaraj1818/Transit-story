@@ -116,8 +116,13 @@ export default function FloatingActions() {
 
         <a
           href={whatsappHref}
-          target={whatsappHref !== '#' ? '_blank' : undefined}
+          target="_blank"
           rel="noopener noreferrer"
+          onClick={(e) => {
+            if (!whatsappHref || whatsappHref === '#') {
+              e.preventDefault();
+            }
+          }}
           aria-label="Chat with us on WhatsApp"
           className="relative w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-[#25D366] hover:bg-[#22c35e] text-white flex items-center justify-center shadow-[0_6px_20px_rgba(37,211,102,0.4)] hover:shadow-[0_10px_28px_rgba(37,211,102,0.55)] border border-white/30 transition-all duration-300 cursor-pointer select-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#25D366] focus-visible:outline-offset-2"
         >

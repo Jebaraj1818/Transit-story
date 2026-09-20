@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify, render_template, send_from_directory
+from flask import Flask, jsonify, render_template, send_from_directory, request
 from flask_cors import CORS
 from backend.config import Config, ensure_database_exists
 from backend.db import db
@@ -31,6 +31,17 @@ def create_app(config_class=Config):
     app.register_blueprint(api_bp)
     app.register_blueprint(admin_bp)
     
+    # Template context processor for dynamic live website URL
+    @app.context_processor
+    def inject_app_base_url():
+        base_url = Config.APP_BASE_URL
+        # If APP_BASE_URL is default localhost but request arrived from live domain, align dynamically
+        host = request.headers.get('X-Forwarded-Host') or request.host
+        scheme = request.headers.get('X-Forwarded-Proto') or request.scheme
+        if host and 'localhost' not in host and '127.0.0.1' not in host:
+            base_url = f"{scheme}://{host}".rstrip('/')
+        return dict(app_base_url=base_url)
+
     # Route to serve public images from root public/ folder
     @app.route('/images/<path:filename>')
     def serve_public_images(filename):

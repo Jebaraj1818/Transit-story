@@ -18,7 +18,7 @@ const API_BASE = '/api';
 /**
  * Helper to perform safe fetch with timeout
  */
-async function fetchJson(url, options = {}, timeoutMs = 4000) {
+async function fetchJson(url, options = {}, timeoutMs = 12000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 

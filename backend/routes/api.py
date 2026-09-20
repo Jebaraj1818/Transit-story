@@ -1,4 +1,5 @@
 import re
+from sqlalchemy.orm import joinedload, selectinload
 from flask import Blueprint, jsonify, request
 from backend.db import db
 from backend.models import (
@@ -40,7 +41,12 @@ def get_categories():
 def get_destinations():
     category_slug = request.args.get('category', '').strip().lower()
     
-    query = Destination.query.filter_by(is_published=True)
+    query = Destination.query.options(
+        joinedload(Destination.category),
+        selectinload(Destination.gallery),
+        selectinload(Destination.highlights),
+        selectinload(Destination.experiences)
+    ).filter_by(is_published=True)
     
     if category_slug and category_slug != 'all':
         category = Category.query.filter_by(slug=category_slug).first()
@@ -64,20 +70,35 @@ def get_destination(slug):
     target_slug = SLUG_ALIASES.get(clean_slug, clean_slug)
     
     # 1. Check exact slug or alias slug
-    dest = Destination.query.filter(
+    dest = Destination.query.options(
+        joinedload(Destination.category),
+        selectinload(Destination.gallery),
+        selectinload(Destination.highlights),
+        selectinload(Destination.experiences)
+    ).filter(
         (Destination.slug == clean_slug) | (Destination.slug == target_slug)
     ).first()
     
     # 2. Check previous_slugs history (comma-separated list)
     if not dest:
-        dest = Destination.query.filter(
+        dest = Destination.query.options(
+            joinedload(Destination.category),
+            selectinload(Destination.gallery),
+            selectinload(Destination.highlights),
+            selectinload(Destination.experiences)
+        ).filter(
             (Destination.previous_slugs.like(f"%{clean_slug}%")) |
             (Destination.previous_slugs.like(f"%{target_slug}%"))
         ).first()
     
     # 3. Try finding by ID if integer passed
     if not dest and clean_slug.isdigit():
-        dest = Destination.query.get(int(clean_slug))
+        dest = Destination.query.options(
+            joinedload(Destination.category),
+            selectinload(Destination.gallery),
+            selectinload(Destination.highlights),
+            selectinload(Destination.experiences)
+        ).get(int(clean_slug))
             
     if not dest or not dest.is_published:
         return jsonify({'error': f"Destination '{slug}' not found"}), 404

@@ -86,7 +86,7 @@
     <header class="topbar">
       <h1 class="topbar-title">{% block page_title %}Dashboard{% endblock %}</h1>
       <div class="topbar-actions">
-        <a href="http://localhost:3000" target="_blank" class="btn btn-outline btn-sm">
+        <a href="{{ app_base_url }}" target="_blank" class="btn btn-outline btn-sm">
           <span>View Live Website ↗</span>
         </a>
         {% block topbar_actions %}{% endblock %}

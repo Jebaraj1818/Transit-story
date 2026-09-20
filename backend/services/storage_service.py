@@ -5,7 +5,7 @@ THE TRANSIT STORY — VERCEL BLOB STORAGE SERVICE
 Production cloud storage integration using official Vercel Blob architecture.
 - Small images (< 4 MB): Server-side authenticated upload to Vercel Blob.
 - Large videos (<= 100 MB): Secure direct client-to-Blob upload via scoped client tokens.
-- Master BLOB_READ_WRITE_TOKEN is strictly server-side and never exposed to browser.
+- Master TRANSIT_BLOB_READ_WRITE_TOKEN is strictly server-side and never exposed to browser.
 - No local filesystem fallback in production (returns clear configuration error).
 - Strict MIME and file magic-byte validation (rejects SVG, HTML, scripts, executables).
 ==============================================================================
@@ -49,7 +49,7 @@ MAX_VIDEO_SIZE = 100 * 1024 * 1024     # 100 MB max for videos via direct client
 
 def is_blob_configured():
     """Checks if Vercel Blob token is set in server environment."""
-    return bool(Config.BLOB_READ_WRITE_TOKEN)
+    return bool(Config.TRANSIT_BLOB_READ_WRITE_TOKEN)
 
 
 def sanitize_pathname(folder, original_filename, is_video=False):
@@ -157,11 +157,11 @@ def upload_file_to_blob(file_bytes, pathname, content_type='application/octet-st
     Uploads file bytes directly to Vercel Blob public storage via REST API.
     Used for small images (< 4 MB).
     Returns (True, blob_info_dict) on success, or (False, error_message) on failure.
-    Master BLOB_READ_WRITE_TOKEN is kept strictly server-side.
+    Master TRANSIT_BLOB_READ_WRITE_TOKEN is kept strictly server-side.
     """
-    token = Config.BLOB_READ_WRITE_TOKEN
+    token = Config.TRANSIT_BLOB_READ_WRITE_TOKEN
     if not token:
-        logger.error("[Vercel Blob] Upload failed: BLOB_READ_WRITE_TOKEN is not configured in server environment.")
+        logger.error("[Vercel Blob] Upload failed: TRANSIT_BLOB_READ_WRITE_TOKEN is not configured in server environment.")
         return False, "Vercel Blob storage is not configured."
 
     url = f"{VERCEL_BLOB_API_BASE}/{pathname.lstrip('/')}"
@@ -214,9 +214,9 @@ def delete_blob(blob_url):
     if not ('blob.vercel-storage.com' in clean_url):
         return False, "URL does not belong to project's Vercel Blob storage."
 
-    token = Config.BLOB_READ_WRITE_TOKEN
+    token = Config.TRANSIT_BLOB_READ_WRITE_TOKEN
     if not token:
-        logger.warning("[Vercel Blob] Deletion skipped: BLOB_READ_WRITE_TOKEN is not configured.")
+        logger.warning("[Vercel Blob] Deletion skipped: TRANSIT_BLOB_READ_WRITE_TOKEN is not configured.")
         return False, "Vercel Blob storage is not configured."
 
     url = f"{VERCEL_BLOB_API_BASE}/delete"
@@ -244,12 +244,12 @@ def generate_scoped_client_upload_token(folder, filename, content_type, size_byt
     """
     Generates an official scoped Vercel Blob client token for large video uploads (up to 100MB).
     Security guarantees:
-    - Master BLOB_READ_WRITE_TOKEN is NEVER sent to the client.
+    - Master TRANSIT_BLOB_READ_WRITE_TOKEN is NEVER sent to the client.
     - Generates a scoped temporary client token restricted to the specific pathname, max size, and MIME type.
     - Matches official @vercel/blob/client generateClientTokenFromReadWriteToken specification.
     - Browser uploads directly to Vercel Blob using this scoped token.
     """
-    token = Config.BLOB_READ_WRITE_TOKEN
+    token = Config.TRANSIT_BLOB_READ_WRITE_TOKEN
     if not token:
         return False, "Vercel Blob storage is not configured.", None
 

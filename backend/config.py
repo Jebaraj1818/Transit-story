@@ -5,7 +5,16 @@ from dotenv import load_dotenv
 # Load .env file from project root or current working directory
 load_dotenv()
 
-class Config:
+class ConfigMeta(type):
+    """Metaclass to ensure BLOB_READ_WRITE_TOKEN and TRANSIT_BLOB_READ_WRITE_TOKEN stay synced during tests and runtime."""
+    def __setattr__(cls, name, value):
+        super().__setattr__(name, value)
+        if name == 'BLOB_READ_WRITE_TOKEN':
+            super().__setattr__('TRANSIT_BLOB_READ_WRITE_TOKEN', value)
+        elif name == 'TRANSIT_BLOB_READ_WRITE_TOKEN':
+            super().__setattr__('BLOB_READ_WRITE_TOKEN', value)
+
+class Config(metaclass=ConfigMeta):
     SECRET_KEY = os.environ.get('SECRET_KEY', 'the-transit-story-secret-key-2026')
     
     DB_HOST = os.environ.get('DB_HOST', '127.0.0.1')
@@ -71,8 +80,9 @@ class Config:
     # App base URL for reset links and redirects
     APP_BASE_URL = os.environ.get('APP_BASE_URL', 'http://localhost:3000').rstrip('/')
 
-    # Vercel Blob Cloud Storage Configuration
-    BLOB_READ_WRITE_TOKEN = os.environ.get('BLOB_READ_WRITE_TOKEN', '').strip()
+    # Vercel Blob Cloud Storage Configuration (Public Media Store)
+    TRANSIT_BLOB_READ_WRITE_TOKEN = os.environ.get('TRANSIT_BLOB_READ_WRITE_TOKEN', '').strip()
+    BLOB_READ_WRITE_TOKEN = TRANSIT_BLOB_READ_WRITE_TOKEN
 
     # Session cookie config for admin authentication
     SESSION_COOKIE_HTTPONLY = True

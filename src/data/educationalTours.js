@@ -84,7 +84,7 @@ export const EDUCATIONAL_TOURS_DATA = {
   intro: {
     eyebrow: 'EXPERIENTIAL LEARNING',
     heading: 'Bridging classroom learning with real-world exposure and regional exploration.',
-    description: 'The Transit Story arranges custom educational and industrial visits for colleges, academic departments, and student cohorts. We coordinate dedicated private group transport, accommodation, and balanced schedules designed specifically around your institution’s requirements — never off-the-shelf packages.'
+    description: 'Transit Story arranges custom educational and industrial visits for colleges, academic departments, and student cohorts. We coordinate dedicated private group transport, accommodation, and balanced schedules designed specifically around your institution’s requirements — never off-the-shelf packages.'
   },
   heroSlides: [
     {

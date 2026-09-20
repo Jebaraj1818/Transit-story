@@ -162,7 +162,7 @@ export const DESTINATIONS = [
       '/images/kodaikanal-04.avif'
     ],
     description: 'Quiet forest walks, serene lake mornings, and unhurried viewpoints away from crowded thoroughfares.',
-    about: 'Set upon the Palani Hills of Dindigul district, Kodaikanal combines dense pine woods, dramatic cloud-filled valleys, and secluded highland fruit orchards. The Transit Story coordinates private highland transit, serene stays, and bespoke nature walks tailored directly to your requirements.',
+    about: 'Set upon the Palani Hills of Dindigul district, Kodaikanal combines dense pine woods, dramatic cloud-filled valleys, and secluded highland fruit orchards. Transit Story coordinates private highland transit, serene stays, and bespoke nature walks tailored directly to your requirements.',
     experiences: [
       'Sunrise vantage walks overlooking deep cloud-filled valleys',
       'Canopy walking under century-old pine and eucalyptus forests',
@@ -201,7 +201,7 @@ export const DESTINATIONS = [
       '/images/kochi-alappuzha-03.png'
     ],
     description: 'Historic colonial maritime quarters, quiet backwater canals, and curated coastal pacing arranged around your preferences.',
-    about: 'Combining the historic spice warehouses and colonial art streets of Fort Kochi with the tranquil canal networks of Alappuzha, this journey brings together seafaring history and slow backwater life. The Transit Story coordinates private transfers, verified boutique stays, and leisurely water exploration tailored entirely to your group.',
+    about: 'Combining the historic spice warehouses and colonial art streets of Fort Kochi with the tranquil canal networks of Alappuzha, this journey brings together seafaring history and slow backwater life. Transit Story coordinates private transfers, verified boutique stays, and leisurely water exploration tailored entirely to your group.',
     experiences: [
       'Heritage walking through Fort Kochi, Mattancherry spice lanes, and colonial avenues',
       'Private day or sunset canal cruises through the unhurried waterways of Alappuzha',
@@ -240,7 +240,7 @@ export const DESTINATIONS = [
       '/images/wonderla-group-escapes-04.avif'
     ],
     description: 'High-energy recreation, curated group transit, and structured leisure arrangements designed for student batches and family gatherings.',
-    about: 'Situated on the scenic outskirts of Kochi, Wonderla provides expansive recreation zones, water attractions, and open-air entertainment. The Transit Story arranges comfortable group transit, verified stays, and flexible pacing tailored directly around your requirements.',
+    about: 'Situated on the scenic outskirts of Kochi, Wonderla provides expansive recreation zones, water attractions, and open-air entertainment. Transit Story arranges comfortable group transit, verified stays, and flexible pacing tailored directly around your requirements.',
     experiences: [
       'Coordinated private group transport with flexible departure timings',
       'Full-day leisure access across aquatic and adventure recreation zones',

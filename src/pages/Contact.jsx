@@ -87,7 +87,7 @@ export default function Contact() {
           <div className="flex items-center justify-between gap-4 pb-2.5 mb-5 sm:mb-7 border-b border-[#E3DCBF]/80 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-earth font-medium">
             <div className="flex items-center gap-2">
               <span className="w-4 h-px bg-earth" aria-hidden="true" />
-              <span>Let&rsquo;s Connect • The Transit Story</span>
+              <span>Let&rsquo;s Connect • Transit Story</span>
             </div>
             <span className="hidden sm:inline-block font-serif italic text-charcoal-muted tracking-normal text-xs lowercase">
               general correspondence
@@ -107,7 +107,7 @@ export default function Contact() {
 
             {/* Concise Supporting Text */}
             <p className="font-sans text-sm sm:text-base md:text-[17px] text-charcoal-muted leading-relaxed font-normal max-w-2xl">
-              Have a question, want to know more about The Transit Story, or simply want to get in touch? We&rsquo;d be glad to hear from you.
+              Have a question, want to know more about Transit Story, or simply want to get in touch? We&rsquo;d be glad to hear from you.
             </p>
           </motion.div>
         </header>
@@ -120,7 +120,7 @@ export default function Contact() {
             &ldquo;Every journey begins with a conversation.&rdquo;
           </p>
           <span className="hidden md:inline-block text-[11px] uppercase tracking-[0.2em] text-gold font-medium">
-            The Transit Story
+            Transit Story
           </span>
         </div>
 
@@ -255,7 +255,7 @@ export default function Contact() {
                   Thank You for Reaching Out
                 </h3>
                 <p className="text-xs sm:text-sm text-charcoal-muted max-w-md mx-auto leading-relaxed font-normal">
-                  We have received your message. A member of The Transit Story team will review your inquiry and respond to you shortly.
+                  We have received your message. A member of the Transit Story team will review your inquiry and respond to you shortly.
                 </p>
                 <div className="pt-3">
                   <button

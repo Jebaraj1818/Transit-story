@@ -266,6 +266,12 @@ class AdminAndEmailTestCase(unittest.TestCase):
             'contact_phone_4': '+91 98765 43213'
         }
 
+        # Capture pre-test values to accurately restore them in finally block
+        pre_test_values = {}
+        for k in test_numbers.keys():
+            s = SiteSetting.query.filter_by(setting_key=k).first()
+            pre_test_values[k] = s.setting_value if s else None
+
         try:
             post_res = self.client.post('/admin/site-settings', data={
                 'brand_name': 'The Transit Story',
@@ -283,11 +289,93 @@ class AdminAndEmailTestCase(unittest.TestCase):
 
             print("[PASS] Owner mobile numbers site settings save and API retrieval")
         finally:
-            # Clean up test numbers so live DB is not left with test numbers
-            for k in test_numbers.keys():
+            # Restore original values so live database is preserved intact
+            for k, orig_val in pre_test_values.items():
                 s = SiteSetting.query.filter_by(setting_key=k).first()
-                if s:
-                    s.setting_value = ''
+                if s and orig_val is not None:
+                    s.setting_value = orig_val
+            db.session.commit()
+
+    def test_08_site_settings_preserve_on_blank_submission(self):
+        """
+        Verify:
+        - existing non-empty setting + blank submitted value => existing value remains unchanged
+        - existing setting + new non-empty value => value updates normally
+        - empty/nonexistent setting + blank value => no unnecessary new value is created
+        """
+        super_admins = Admin.query.filter_by(role='SUPER_ADMIN', is_active=True).all()
+        self.assertTrue(len(super_admins) >= 1)
+        with self.client.session_transaction() as sess:
+            sess['admin_id'] = super_admins[0].id
+
+        keys_to_track = ['contact_phone_1', 'contact_phone_2', 'test_dummy_empty_setting']
+        saved_values = {}
+        for k in keys_to_track:
+            s = SiteSetting.query.filter_by(setting_key=k).first()
+            saved_values[k] = s.setting_value if s else None
+
+        try:
+            # Ensure an existing non-empty setting and an existing empty setting exist
+            s1 = SiteSetting.query.filter_by(setting_key='contact_phone_1').first()
+            if not s1:
+                s1 = SiteSetting(setting_key='contact_phone_1', setting_value='+91 8248697026')
+                db.session.add(s1)
+            else:
+                s1.setting_value = '+91 8248697026'
+
+            s_empty = SiteSetting.query.filter_by(setting_key='test_dummy_empty_setting').first()
+            if not s_empty:
+                s_empty = SiteSetting(setting_key='test_dummy_empty_setting', setting_value='')
+                db.session.add(s_empty)
+            else:
+                s_empty.setting_value = ''
+            db.session.commit()
+
+            # Submit form:
+            # 1. contact_phone_1 is submitted as blank (whitespace)
+            # 2. contact_phone_2 is submitted as a new non-empty value
+            # 3. test_dummy_empty_setting is submitted as blank
+            # 4. nonexistent_dummy_key is submitted as blank
+            res = self.client.post('/admin/site-settings', data={
+                'contact_phone_1': '   ',
+                'contact_phone_2': '+91 77777 66666',
+                'test_dummy_empty_setting': '',
+                'nonexistent_dummy_key': '   ',
+            }, follow_redirects=True)
+            self.assertEqual(res.status_code, 200)
+
+            # Verification 1: Existing non-empty setting preserved when submitted blank
+            s1_after = SiteSetting.query.filter_by(setting_key='contact_phone_1').first()
+            self.assertEqual(s1_after.setting_value, '+91 8248697026')
+
+            # Verification 2: Existing setting updated normally when submitted with non-empty value
+            s2_after = SiteSetting.query.filter_by(setting_key='contact_phone_2').first()
+            self.assertEqual(s2_after.setting_value, '+91 77777 66666')
+
+            # Verification 3: Existing empty setting remains empty
+            s_empty_after = SiteSetting.query.filter_by(setting_key='test_dummy_empty_setting').first()
+            self.assertEqual(s_empty_after.setting_value, '')
+
+            # Verification 4: Nonexistent setting with blank value was not created
+            s_nonexistent = SiteSetting.query.filter_by(setting_key='nonexistent_dummy_key').first()
+            self.assertIsNone(s_nonexistent)
+
+            print("[PASS] Site settings blank-value preservation & safe update rules")
+        finally:
+            # Restore all original values
+            for k, orig_val in saved_values.items():
+                s = SiteSetting.query.filter_by(setting_key=k).first()
+                if orig_val is None:
+                    if s:
+                        db.session.delete(s)
+                else:
+                    if s:
+                        s.setting_value = orig_val
+                    else:
+                        db.session.add(SiteSetting(setting_key=k, setting_value=orig_val))
+            dummy = SiteSetting.query.filter_by(setting_key='nonexistent_dummy_key').first()
+            if dummy:
+                db.session.delete(dummy)
             db.session.commit()
 
 if __name__ == '__main__':

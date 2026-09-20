@@ -705,11 +705,15 @@ def site_settings():
     if request.method == 'POST':
         # Check permissions: only Super Admin can edit critical settings/notification emails
         for key, val in request.form.items():
+            cleaned_val = (val or '').strip()
             setting = SiteSetting.query.filter_by(setting_key=key).first()
             if setting:
-                setting.setting_value = val.strip()
-            else:
-                db.session.add(SiteSetting(setting_key=key, setting_value=val.strip()))
+                # Never overwrite an existing setting with an empty/whitespace-only value
+                if cleaned_val:
+                    setting.setting_value = cleaned_val
+            elif cleaned_val:
+                # New settings should only be created when the submitted value is non-empty
+                db.session.add(SiteSetting(setting_key=key, setting_value=cleaned_val))
         db.session.commit()
         flash("Site settings updated successfully.", "success")
         return redirect(url_for('admin.site_settings'))

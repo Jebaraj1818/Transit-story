@@ -66,7 +66,7 @@ class Config(metaclass=ConfigMeta):
     # Brevo Email Configuration
     BREVO_API_KEY = os.environ.get('BREVO_API_KEY', '').strip()
     BREVO_SENDER_EMAIL = os.environ.get('BREVO_SENDER_EMAIL', 'transitstory.in@gmail.com').strip()
-    BREVO_SENDER_NAME = os.environ.get('BREVO_SENDER_NAME', 'The Transit Story').strip()
+    BREVO_SENDER_NAME = os.environ.get('BREVO_SENDER_NAME', 'Transit Story').strip()
     
     # Optional Brevo Transactional Template IDs
     BREVO_TEMPLATE_ADMIN_PASSWORD_RESET = os.environ.get('BREVO_TEMPLATE_ADMIN_PASSWORD_RESET')

@@ -10,7 +10,7 @@ const DEFAULT_FAQ_ITEMS = [
     id: 'customize-trip',
     question: 'Can I customise my trip?',
     answer:
-      'Yes, entirely. Every journey with The Transit Story is arranged around your timeline, group size, and preferred destinations. Rather than selling rigid pre-packaged tours, we build the itinerary and logistics around what you want to experience.',
+      'Yes, entirely. Every journey with Transit Story is arranged around your timeline, group size, and preferred destinations. Rather than selling rigid pre-packaged tours, we build the itinerary and logistics around what you want to experience.',
   },
   {
     id: 'transportation',
@@ -73,7 +73,7 @@ export default function FAQ() {
           <div className="flex items-center justify-between gap-4 pb-2.5 mb-3.5 sm:mb-4 border-b border-[#E3DCBF]/80 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-earth font-medium">
             <div className="flex items-center gap-2">
               <span className="w-4 h-px bg-earth" aria-hidden="true" />
-              <span>Help & Guidance • The Transit Story</span>
+              <span>Help & Guidance • Transit Story</span>
             </div>
             <span className="hidden sm:inline-block font-serif italic text-charcoal-muted tracking-normal text-xs lowercase">
               practical questions

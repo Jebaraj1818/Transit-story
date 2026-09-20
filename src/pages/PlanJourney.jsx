@@ -144,7 +144,7 @@ export default function PlanJourney() {
                 Your Journey Request is Received
               </h3>
               <p className="text-sm text-charcoal-muted max-w-md mx-auto leading-relaxed">
-                Thank you for entrusting us with your journey plans. A travel curator from The Transit Story will reach out within 24 to 48 hours to schedule a conversation.
+                Thank you for entrusting us with your journey plans. A travel curator from Transit Story will reach out within 24 to 48 hours to schedule a conversation.
               </p>
               <div className="pt-4">
                 <Button

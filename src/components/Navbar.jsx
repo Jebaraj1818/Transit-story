@@ -48,18 +48,18 @@ export default function Navbar() {
           <Link
             to="/"
             className="flex items-center gap-2.5 sm:gap-3.5 group text-left focus-visible:outline-[#C49A45] min-h-[44px]"
-            aria-label="The Transit Story — Home"
+            aria-label="Transit Story — Home"
           >
             <div className="relative w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden border border-[#C49A45]/40 shadow-sm transition-transform duration-300 group-hover:scale-105 flex-shrink-0 bg-[#FAF8F3]">
               <img
                 src="/logo/Transit-logo.jpeg"
-                alt="The Transit Story emblem"
+                alt="Transit Story emblem"
                 className="w-full h-full object-cover scale-[1.04]"
               />
             </div>
             <div className="flex flex-col min-w-0">
               <span className="font-serif text-[1.1rem] sm:text-[1.3rem] font-medium tracking-wide text-[#173A2D] group-hover:text-[#426047] transition-colors leading-none whitespace-nowrap">
-                The Transit Story
+                Transit Story
               </span>
               <span className="text-[8.5px] sm:text-[10px] font-sans tracking-wider sm:tracking-expansive uppercase mt-1 font-medium text-[#426047] whitespace-nowrap flex items-center gap-1 sm:gap-1.5">
                 <span>Curated Journeys</span>
@@ -121,7 +121,7 @@ export default function Navbar() {
               to="/plan-your-journey"
               className="group inline-flex items-center justify-center font-sans text-[11px] sm:text-xs font-medium uppercase tracking-editorial gap-2 px-5 py-2.5 rounded-sm bg-[#173A2D] text-[#F5F0E5] border border-[#173A2D] hover:bg-[#1F4C3C] hover:border-[#1F4C3C] transition-all duration-250 ease-editorial shadow-sm cursor-pointer select-none active:scale-[0.98]"
             >
-              <span>Plan Your Trip</span>
+              <span>Plan Your Experience</span>
               <ArrowRight className="w-3.5 h-3.5 text-[#F5F0E5] transition-transform duration-250 ease-editorial group-hover:translate-x-1" />
             </Link>
           </motion.div>
@@ -179,7 +179,7 @@ export default function Navbar() {
                   to="/plan-your-journey"
                   className="group flex items-center justify-center font-sans text-xs font-semibold uppercase tracking-editorial gap-2 px-5 py-3.5 rounded-sm bg-[#173A2D] text-[#F5F0E5] hover:bg-[#1F4C3C] active:scale-[0.98] transition-all duration-200 shadow-sm text-center min-h-[46px]"
                 >
-                  <span>Plan Your Trip</span>
+                  <span>Plan Your Experience</span>
                   <ArrowRight className="w-4 h-4 text-[#F5F0E5] transition-transform duration-200 group-hover:translate-x-1" />
                 </Link>
                 <Link

@@ -8,7 +8,7 @@
  * ============================================================================
  */
 
-import { DESTINATIONS, getAllTours, getDestinationBySlug as getLocalDestBySlug, matchesTourCategory, TOUR_CATEGORY_FILTERS } from '../data/destinations';
+import { DESTINATIONS, getDestinationBySlug as getLocalDestBySlug, matchesTourCategory, TOUR_CATEGORY_FILTERS } from '../data/destinations';
 import { SERVICES_DATA } from '../data/services';
 import { SAMPLE_STORIES, getStoryBySlug as getLocalStoryBySlug } from '../data/stories';
 import { SOCIAL_LINKS } from '../config/socialLinks';
@@ -98,22 +98,22 @@ export async function getDestinations(category = 'all') {
       ? `${API_BASE}/destinations?category=${encodeURIComponent(category)}`
       : `${API_BASE}/destinations`;
     const data = await fetchJson(url);
-    if (Array.isArray(data) && data.length > 0) {
+    if (Array.isArray(data)) {
       if (!category || category === 'all') {
         cachedDestinations = data;
       }
       return data;
     }
+    return [];
   } catch (err) {
-    // Graceful fallback to cached destinations first
+    // Graceful fallback to cached authoritative destinations if available from earlier fetch
     if (cachedDestinations && cachedDestinations.length > 0) {
       if (!category || category === 'all') return cachedDestinations;
       return cachedDestinations.filter((tour) => matchesTourCategory(tour, category));
     }
+    // Re-throw so callers know authoritative API failed rather than falling back to static
+    throw err;
   }
-  const localAll = getAllTours();
-  if (!category || category === 'all') return localAll;
-  return localAll.filter((tour) => matchesTourCategory(tour, category));
 }
 
 /**

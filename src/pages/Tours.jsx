@@ -1,41 +1,80 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useSearchParams, useLocation } from 'react-router-dom';
-import { MapPin, ArrowRight, Compass, Sparkles } from 'lucide-react';
-import { getAllTours, matchesTourCategory, TOUR_CATEGORY_FILTERS } from '../data/destinations';
+import { MapPin, ArrowRight, Compass, Sparkles, AlertCircle } from 'lucide-react';
+import { matchesTourCategory, TOUR_CATEGORY_FILTERS } from '../data/destinations';
 import { getDestinations, getCategories } from '../api/client';
 
 export default function Tours() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentCategory = searchParams.get('category') || 'all';
 
-  // State with initial local fallback so render is instantaneous
-  const [allTours, setAllTours] = useState(() => getAllTours());
+  // Authoritative destinations state with proper loading/error cycle
+  const [allTours, setAllTours] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [categories, setCategories] = useState(TOUR_CATEGORY_FILTERS);
 
-  // Fetch from Flask REST API
+  // Reusable authoritative fetcher (supports retry on error)
+  const fetchToursData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getDestinations('all');
+      if (Array.isArray(data)) {
+        setAllTours(data);
+      } else {
+        setAllTours([]);
+      }
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching destinations:', err);
+      setError(err?.message || 'Unable to load destinations. Please check your connection.');
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch from Flask REST API on mount
   useEffect(() => {
     let isMounted = true;
-    getDestinations('all').then((data) => {
-      if (isMounted && Array.isArray(data) && data.length > 0) {
-        setAllTours(data);
-      }
-    });
-    getCategories().then((cats) => {
-      if (isMounted && Array.isArray(cats) && cats.length > 0) {
-        const formatted = cats.map((c) => ({
-          id: c.slug || String(c.id),
-          slug: c.slug,
-          numericId: c.id,
-          label: c.label || c.name || c.slug,
-          name: c.name || c.label,
-        }));
-        // Ensure 'all' is at the front
-        if (!formatted.some((c) => c.id === 'all')) {
-          formatted.unshift({ id: 'all', label: 'All', slug: 'all' });
+
+    getDestinations('all')
+      .then((data) => {
+        if (isMounted) {
+          if (Array.isArray(data)) {
+            setAllTours(data);
+          }
+          setLoading(false);
         }
-        setCategories(formatted);
-      }
-    });
+      })
+      .catch((err) => {
+        if (isMounted) {
+          console.error('Error fetching destinations:', err);
+          setError(err?.message || 'Unable to load destinations. Please check your connection.');
+          setLoading(false);
+        }
+      });
+
+    getCategories()
+      .then((cats) => {
+        if (isMounted && Array.isArray(cats) && cats.length > 0) {
+          const formatted = cats.map((c) => ({
+            id: c.slug || String(c.id),
+            slug: c.slug,
+            numericId: c.id,
+            label: c.label || c.name || c.slug,
+            name: c.name || c.label,
+          }));
+          // Ensure 'all' is at the front
+          if (!formatted.some((c) => c.id === 'all')) {
+            formatted.unshift({ id: 'all', label: 'All', slug: 'all' });
+          }
+          setCategories(formatted);
+        }
+      })
+      .catch(() => {
+        // Retain initial category filters on error
+      });
+
     return () => {
       isMounted = false;
     };
@@ -145,8 +184,56 @@ export default function Tours() {
             </div>
           )}
 
-          {/* Cards Grid */}
-          {filteredTours.length > 0 ? (
+          {/* Cards Grid / Skeleton / Error State */}
+          {loading ? (
+            <div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-7"
+              aria-label="Loading destinations directory"
+              aria-busy="true"
+            >
+              {[...Array(6)].map((_, idx) => (
+                <div
+                  key={idx}
+                  className="flex flex-col bg-white/70 border border-[#E3DCBF] rounded-sm overflow-hidden shadow-sm animate-pulse"
+                  aria-hidden="true"
+                >
+                  <div className="relative aspect-[16/10] sm:aspect-[4/3] bg-[#EADDCA]/50">
+                    <div className="absolute top-3 left-3 w-24 h-5 bg-[#D8C7B0]/60 rounded-sm" />
+                    <div className="absolute bottom-3 left-3 right-3 flex items-center gap-1.5">
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#D8C7B0]/70 flex-shrink-0" />
+                      <div className="h-3.5 bg-[#D8C7B0]/60 rounded-sm w-1/3" />
+                    </div>
+                  </div>
+                  <div className="p-4 sm:p-4.5 flex flex-col flex-grow">
+                    <div className="h-6 bg-[#EADDCA]/70 rounded-sm w-3/4 mb-2.5" />
+                    <div className="space-y-1.5 flex-grow">
+                      <div className="h-3.5 bg-[#EADDCA]/40 rounded-sm w-full" />
+                      <div className="h-3.5 bg-[#EADDCA]/40 rounded-sm w-4/5" />
+                    </div>
+                    <div className="pt-3.5 mt-4 border-t border-[#E8E1CD]/70 flex items-center justify-between">
+                      <div className="h-3.5 bg-[#EADDCA]/50 rounded-sm w-28" />
+                      <div className="h-3 bg-[#EADDCA]/30 rounded-sm w-16 hidden sm:block" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="py-12 text-center bg-white/60 border border-[#E3DCBF] rounded-sm px-4">
+              <AlertCircle className="w-9 h-9 text-[#8B263E]/80 mx-auto mb-2.5" />
+              <h3 className="font-serif text-lg sm:text-xl text-forest mb-1.5">Unable to Load Destinations</h3>
+              <p className="text-xs sm:text-sm text-charcoal-muted mb-4 max-w-md mx-auto">
+                We encountered an issue retrieving the travel directory. Please check your connection and try again.
+              </p>
+              <button
+                type="button"
+                onClick={fetchToursData}
+                className="inline-flex items-center justify-center px-5 py-2.5 bg-forest text-ivory text-xs uppercase tracking-editorial font-medium rounded-sm hover:bg-forest-800 transition-colors min-h-[40px] shadow-sm"
+              >
+                Retry
+              </button>
+            </div>
+          ) : filteredTours.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-7">
               {filteredTours.map((tour) => {
                 if (!tour) return null;

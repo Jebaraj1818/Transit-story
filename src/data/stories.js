@@ -35,7 +35,7 @@ export const SAMPLE_STORIES = [
     excerpt: "Away from tourist corridors, we sit with third-generation organic tea farmers understanding how microclimates, shade trees, and endemic flora shape true terroir.",
     content: "At 1,800 meters above sea level, the western winds push dense cloud blankets through shola forests. Here, tea is not merely a commodity; it is an ecological balance. When travelers walk with local farmers, conversations shift from sightseeing to deep soil health, native honeybees, and preserving indigenous watershed basins.",
     image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80",
-    author: "The Transit Story Collective"
+    author: "Transit Story Collective"
   },
   {
     id: "story-3",

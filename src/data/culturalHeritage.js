@@ -16,7 +16,7 @@ export const CULTURAL_HERITAGE_DATA = {
   intro: {
     eyebrow: 'CULTURAL & HERITAGE',
     heading: 'Curated journeys through temples, heritage places, local culture and meaningful destinations.',
-    description: 'The Transit Story arranges unhurried cultural and heritage journeys tailored around your pacing, interests, and group. You choose the journey; we coordinate the rest.'
+    description: 'Transit Story arranges unhurried cultural and heritage journeys tailored around your pacing, interests, and group. You choose the journey; we coordinate the rest.'
   },
   heroSlides: [
     {

@@ -97,8 +97,8 @@ export default function DestinationDetails() {
   const bannerEyebrow = isEducational ? 'Educational & Industrial Visits' : 'Curated Travel Arrangements';
   const bottomHeading = isEducational ? 'Make This Visit Yours' : 'Make This Journey Yours';
   const bottomDesc = isEducational
-    ? "Tell us your institutional requirements, expected cohort size, and preferred schedule. The Transit Story coordinates dedicated group transport, accommodations, and itinerary flow tailored directly to your institution."
-    : "Tell us when you wish to travel and who you will travel with. The Transit Story coordinates private transit, verified stays, and custom pacing tailored entirely to your requirements.";
+    ? "Tell us your institutional requirements, expected cohort size, and preferred schedule. Transit Story coordinates dedicated group transport, accommodations, and itinerary flow tailored directly to your institution."
+    : "Tell us when you wish to travel and who you will travel with. Transit Story coordinates private transit, verified stays, and custom pacing tailored entirely to your requirements.";
 
   // Normalize all available images
   const allImages =
@@ -235,7 +235,7 @@ export default function DestinationDetails() {
             <span>{backLabel.replace('← ', '')}</span>
           </Link>
           <span className="text-[10.5px] uppercase tracking-expansive text-ivory/60 font-medium hidden sm:inline-block">
-            The Transit Story • Field Dossier
+            Transit Story • Field Dossier
           </span>
         </div>
 

@@ -24,7 +24,7 @@ export default function About() {
           <div className="flex items-center justify-between gap-4 pb-2.5 mb-5 sm:mb-7 border-b border-[#E3DCBF]/80 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-earth font-medium">
             <div className="flex items-center gap-2">
               <span className="w-4 h-px bg-earth" aria-hidden="true" />
-              <span>Our Ethos &amp; Origin • The Transit Story</span>
+              <span>Our Ethos &amp; Origin • Transit Story</span>
             </div>
             <span className="hidden sm:inline-block font-serif italic text-charcoal-muted tracking-normal text-xs lowercase">
               editorial brand story
@@ -65,7 +65,7 @@ export default function About() {
               <div className="lg:sticky lg:top-28">
                 <div className="flex items-center gap-2 text-[10px] sm:text-xs uppercase tracking-[0.22em] text-earth font-medium mb-2">
                   <span className="w-3 h-px bg-earth" aria-hidden="true" />
-                  <span>THE TRANSIT STORY</span>
+                  <span>TRANSIT STORY</span>
                 </div>
                 <p className="text-xs text-charcoal-light font-normal hidden lg:block leading-relaxed">
                   A perspective on mindful exploration, cultural resonance, and conscious patronage.
@@ -78,7 +78,7 @@ export default function About() {
               {/* Prominent Opening Statement Treatment */}
               <div className="border-l-2 border-gold/70 pl-4 sm:pl-6 py-1">
                 <blockquote className="font-serif text-xl sm:text-2xl md:text-[1.75rem] text-forest font-normal italic leading-relaxed text-balance">
-                  &ldquo;The Transit Story was founded on a simple realization: the most transformative journeys are not measured by miles traversed or tick-box monuments, but by the depth of human and cultural resonance left in one&rsquo;s consciousness.&rdquo;
+                  &ldquo;Transit Story was founded on a simple realization: the most transformative journeys are not measured by miles traversed or tick-box monuments, but by the depth of human and cultural resonance left in one&rsquo;s consciousness.&rdquo;
                 </blockquote>
               </div>
 
@@ -176,7 +176,7 @@ export default function About() {
 
               <div className="pt-1">
                 <span className="text-[11px] sm:text-xs text-ivory/60 tracking-wider uppercase">
-                  The Transit Story Philosophy
+                  Transit Story Philosophy
                 </span>
               </div>
             </div>
@@ -196,7 +196,7 @@ export default function About() {
                 &ldquo;You choose the journey. We arrange the rest.&rdquo;
               </h3>
               <p className="text-xs sm:text-sm text-charcoal-muted leading-relaxed max-w-xl font-normal">
-                While cultural depth defines our ethos, The Transit Story is a comprehensive travel arrangements service. We coordinate private transportation fleets, hotel and accommodation arrangements, tour planning, college and educational travel, group journeys, and tailored logistics across South India with seamless attention to comfort.
+                While cultural depth defines our ethos, Transit Story is a comprehensive travel arrangements service. We coordinate private transportation fleets, hotel and accommodation arrangements, tour planning, college and educational travel, group journeys, and tailored logistics across South India with seamless attention to comfort.
               </p>
             </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, MapPin, Compass, Mail, Phone } from 'lucide-react';
+import { ArrowRight, MapPin, Mail, Phone } from 'lucide-react';
 import Button from './Button';
 import { SOCIAL_LINKS } from '../config/socialLinks';
 import { getSiteSettings } from '../api/client';
@@ -48,7 +48,7 @@ function LinkedInIcon({ className = 'w-[22px] h-[22px]' }) {
 }
 
 /**
- * Editorial Footer Component for The Transit Story.
+ * Editorial Footer Component for Transit Story.
  *
  * Strict Brand Palette:
  *  - Charcoal background: #20231F (darker, quieter, and conclusive)
@@ -115,7 +115,7 @@ export default function Footer() {
               size="md"
               className="tracking-widest w-full sm:w-auto"
             >
-              <span>Plan Your Trip</span>
+              <span>Plan Your Experience</span>
               <ArrowRight className="w-4 h-4 text-[#173A2D]" />
             </Button>
             <Link
@@ -137,18 +137,18 @@ export default function Footer() {
             <Link
               to="/"
               className="flex items-center gap-3.5 group text-left w-fit focus-visible:outline-[#C49A45] min-h-[44px]"
-              aria-label="The Transit Story — Home"
+              aria-label="Transit Story — Home"
             >
               <div className="relative w-11 h-11 rounded-full overflow-hidden border border-[#C49A45]/40 p-0.5 bg-[#FAF8F3] shadow-sm flex-shrink-0 transition-transform duration-500 group-hover:scale-105">
                 <img
                   src="/logo/Transit-logo.jpeg"
-                  alt="The Transit Story emblem"
+                  alt="Transit Story emblem"
                   className="w-full h-full object-cover scale-[1.04] rounded-full"
                 />
               </div>
               <div className="flex flex-col">
                 <span className="font-serif text-lg sm:text-2xl font-normal tracking-wide text-[#F5F0E5] group-hover:text-[#C49A45] transition-colors leading-tight">
-                  The Transit Story
+                  Transit Story
                 </span>
                 <span className="text-[9.5px] sm:text-[11px] font-sans tracking-kicker text-[#C49A45] uppercase -mt-0.5 font-medium">
                   Curated Journeys
@@ -167,16 +167,10 @@ export default function Footer() {
                   Rooted in Tamil Nadu, South India
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <Compass className="w-3.5 h-3.5 text-[#C49A45] flex-shrink-0" />
-                <span className="uppercase tracking-editorial text-[10.5px] sm:text-[11px]">
-                  Custom Logistics • College IV • Heritage
-                </span>
-              </div>
               <a
                 href={`mailto:${siteSettings?.contact_email || 'transitstory.in@gmail.com'}`}
                 className="flex items-center gap-2 text-[#F5F0E5]/75 hover:text-[#C49A45] transition-colors group pt-0.5"
-                aria-label="Email The Transit Story"
+                aria-label="Email Transit Story"
               >
                 <Mail className="w-3.5 h-3.5 text-[#C49A45] flex-shrink-0" />
                 <span className="font-sans text-[11px] sm:text-xs tracking-normal lowercase group-hover:underline">
@@ -331,7 +325,7 @@ export default function Footer() {
 
         {/* Bottom Editorial Bar */}
         <div className="mt-8 pt-5 border-t border-[#2D312C] flex flex-col sm:flex-row items-center justify-between text-xs text-[#F5F0E5]/50 gap-3 text-center sm:text-left">
-          <p>© {new Date().getFullYear()} The Transit Story. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Transit Story. All rights reserved.</p>
           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-6 text-[10px] sm:text-[10.5px] uppercase tracking-editorial text-[#F5F0E5]/50">
             <span>Rooted in Tamil Nadu</span>
             <span>•</span>

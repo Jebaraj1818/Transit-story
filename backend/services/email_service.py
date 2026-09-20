@@ -95,7 +95,7 @@ def _build_html_email(title, subtitle, content_blocks, action_button=None, foote
           <tr>
             <td style="background-color: #173A2D; padding: 26px 32px; text-align: center; border-bottom: 2px solid #C49A45;">
               <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; color: #FAF7F0; letter-spacing: 0.05em; font-weight: 400; text-transform: uppercase;">
-                The Transit Story
+                Transit Story
               </div>
               <div style="font-size: 10px; color: #C49A45; letter-spacing: 0.18em; text-transform: uppercase; margin-top: 4px; font-weight: 500;">
                 Curated Journeys | Crafted Experiences
@@ -122,7 +122,7 @@ def _build_html_email(title, subtitle, content_blocks, action_button=None, foote
           <!-- Footer Information -->
           <tr>
             <td style="background-color: #EFE9DC; padding: 22px 32px; text-align: center; border-top: 1px solid #E3DCBF; font-size: 11px; color: #6B7268; line-height: 1.5;">
-              <p style="margin: 0 0 6px 0; font-weight: 500; color: #173A2D;">The Transit Story &bull; Curator Desk</p>
+              <p style="margin: 0 0 6px 0; font-weight: 500; color: #173A2D;">Transit Story &bull; Curator Desk</p>
               <p style="margin: 0 0 8px 0;">{footer_text}</p>
               <p style="margin: 0; font-size: 10px; color: #8F958C;">Tamil Nadu, South India &bull; Rooted in Heritage</p>
             </td>
@@ -252,7 +252,7 @@ def send_admin_password_reset(admin, reset_token, reset_url):
     """
     Sends a secure password reset email to an admin user with a single-use token link.
     """
-    subject = "Reset Your Password — The Transit Story Curator Desk"
+    subject = "Reset Your Password — Transit Story Curator Desk"
     template_id = Config.BREVO_TEMPLATE_ADMIN_PASSWORD_RESET
 
     params = {
@@ -264,7 +264,7 @@ def send_admin_password_reset(admin, reset_token, reset_url):
 
     content_blocks = [
         f"<p>Hello <strong>{admin.name}</strong>,</p>",
-        "<p>We received a request to reset the password for your administrator account on <strong>The Transit Story Curator Desk</strong>.</p>",
+        "<p>We received a request to reset the password for your administrator account on <strong>Transit Story Curator Desk</strong>.</p>",
         "<p>Click the button below to choose a new password. This link is single-use and will expire in <strong>60 minutes</strong>:</p>",
         f'<p style="background: #FAF3E3; border-left: 3px solid #C49A45; padding: 10px 14px; font-size: 13px; color: #5A5243; margin: 18px 0;">If you did not request this password reset, you can safely disregard this message. Your password will remain unchanged.</p>'
     ]
@@ -298,7 +298,7 @@ def send_admin_password_changed(admin):
     """
     Sends a security notification confirming that the admin password was changed.
     """
-    subject = "Your Password Has Been Updated — The Transit Story"
+    subject = "Your Password Has Been Updated — Transit Story"
     template_id = Config.BREVO_TEMPLATE_ADMIN_PASSWORD_CHANGED
 
     params = {
@@ -336,7 +336,7 @@ def send_newsletter_welcome(subscriber_email):
     """
     Sends a warm welcome email to newly subscribed visitors.
     """
-    subject = "Welcome to The Transit Story ✨"
+    subject = "Welcome to Transit Story ✨"
     template_id = Config.BREVO_TEMPLATE_NEWSLETTER_WELCOME
 
     params = {
@@ -344,7 +344,7 @@ def send_newsletter_welcome(subscriber_email):
     }
 
     content_blocks = [
-        "<p>Thank you for connecting with <strong>The Transit Story</strong>.</p>",
+        "<p>Thank you for connecting with <strong>Transit Story</strong>.</p>",
         "<p>We curate unhurried journeys, cultural storytelling, private transit, and heritage immersions across South India. From living temple corridors and tea estates to historic backwaters and artisan villages, we design travel experiences around your pacing.</p>",
         "<p>You will occasionally receive our field chronicles, regional travel notes, and seasonal itinerary inspirations.</p>",
         '<div style="border-top: 1px solid #E3DCBF; margin: 24px 0 16px 0; padding-top: 16px; font-style: italic; color: #5A6058; font-family: Georgia, serif;">&ldquo;You choose the journey. We arrange the rest.&rdquo;</div>'
@@ -378,7 +378,7 @@ def send_enquiry_customer_confirmation(enquiry):
     """
     Sends a confirmation email to the traveler after submitting a journey enquiry.
     """
-    subject = "We received your journey enquiry — The Transit Story"
+    subject = "We received your journey enquiry — Transit Story"
     template_id = Config.BREVO_TEMPLATE_ENQUIRY_CUSTOMER
 
     submitted_at = enquiry.created_at.strftime('%d %b %Y, %I:%M %p IST') if enquiry.created_at else "Recently"
@@ -399,7 +399,7 @@ def send_enquiry_customer_confirmation(enquiry):
 
     content_blocks = [
         f"<p>Dear <strong>{enquiry.full_name}</strong>,</p>",
-        "<p>Thank you for reaching out to <strong>The Transit Story</strong>. We have received your journey enquiry and our curation desk is reviewing your requirements.</p>",
+        "<p>Thank you for reaching out to <strong>Transit Story</strong>. We have received your journey enquiry and our curation desk is reviewing your requirements.</p>",
         """
         <table width="100%" cellpadding="8" cellspacing="0" style="background-color: #F6F1E5; border: 1px solid #E0D7BD; border-radius: 3px; font-size: 13px; margin: 18px 0;">
           <tr>
@@ -541,7 +541,7 @@ def send_contact_customer_confirmation(enquiry):
     """
     Sends confirmation to visitor after submitting the general contact form.
     """
-    subject = "Thank you for contacting The Transit Story"
+    subject = "Thank you for contacting Transit Story"
     template_id = Config.BREVO_TEMPLATE_CONTACT_CUSTOMER
 
     submitted_at = enquiry.created_at.strftime('%d %b %Y, %I:%M %p IST') if enquiry.created_at else "Recently"
@@ -556,7 +556,7 @@ def send_contact_customer_confirmation(enquiry):
 
     content_blocks = [
         f"<p>Dear <strong>{enquiry.full_name}</strong>,</p>",
-        "<p>Thank you for reaching out to <strong>The Transit Story</strong>. We have received your message and our team will get back to you shortly.</p>",
+        "<p>Thank you for reaching out to <strong>Transit Story</strong>. We have received your message and our team will get back to you shortly.</p>",
         f'<div style="background: #F6F1E5; border: 1px solid #E0D7BD; border-radius: 3px; padding: 14px; font-size: 13px; color: #2D312C; margin: 16px 0;"><strong>Your Message:</strong><br><span style="color: #5A6058;">{enquiry.notes or "General inquiry"}</span></div>',
         "<p>If your travel dates or requirements are urgent, feel free to reply directly to this email.</p>"
     ]
@@ -565,7 +565,7 @@ def send_contact_customer_confirmation(enquiry):
         title="We Have Received Your Message",
         subtitle="Inquiry Confirmation",
         content_blocks=content_blocks,
-        footer_note="The Transit Story &bull; Curator Desk"
+        footer_note="Transit Story &bull; Curator Desk"
     )
 
     return _send_brevo_email(
@@ -694,13 +694,13 @@ def send_test_email(recipient_email):
     if not sender_email or '@' not in sender_email or not sender_name:
         return False, "Brevo sender configuration is incomplete."
 
-    subject = "The Transit Story — Brevo Email Test"
+    subject = "Transit Story — Brevo Email Test"
     timestamp_str = datetime.utcnow().strftime('%d %b %Y, %I:%M:%S %p UTC')
 
     content_blocks = [
         '<div style="background-color: #FAF3E3; border-left: 3px solid #C49A45; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #5A5243;">',
         '  <strong style="color: #173A2D; font-size: 14px;">Brevo Email Configuration Test</strong><br>',
-        '  This is a test email from The Transit Story admin panel.',
+        '  This is a test email from Transit Story admin panel.',
         '</div>',
         '<p style="margin: 0 0 16px 0; color: #2D312C; font-size: 14px; line-height: 1.6;">',
         '  Your Brevo API integration is responding to the test request.',
@@ -720,7 +720,7 @@ def send_test_email(recipient_email):
         title="Brevo Email Configuration Test",
         subtitle="System Diagnostic",
         content_blocks=content_blocks,
-        footer_note="The Transit Story • Curator Desk System Diagnostic"
+        footer_note="Transit Story • Curator Desk System Diagnostic"
     )
 
     headers = {

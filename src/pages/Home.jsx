@@ -1018,7 +1018,7 @@ export default function Home() {
 
                 <div className="absolute bottom-6 left-6 right-6 text-ivory">
                   <span className="text-[10px] uppercase tracking-kicker text-gold font-medium block mb-1">
-                    Arranged by The Transit Story
+                    Arranged by Transit Story
                   </span>
                   <h4 className="font-serif text-xl sm:text-2xl font-normal text-ivory mb-1">
                     {servicesList[activeService].title}
@@ -1667,7 +1667,7 @@ export default function Home() {
             transition={{ duration: 0.55, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
             className="text-sm sm:text-base text-[#4A4E49] leading-relaxed font-normal max-w-xl mx-auto mt-3 sm:mt-3.5"
           >
-            Occasional journeys, places, stories and travel ideas from The Transit Story.
+            Occasional journeys, places, stories and travel ideas from Transit Story.
           </motion.p>
 
           {/* Understated Editorial Line Below */}

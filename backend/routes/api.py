@@ -9,6 +9,8 @@ from backend.models import (
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
+PUBLIC_CACHE_CONTROL = 'public, s-maxage=60, stale-while-revalidate=300'
+
 # Common destination slug aliases for backward-compatibility & seamless routing
 SLUG_ALIASES = {
     'nellaiyappar': 'nellaiyappar-temple',
@@ -35,17 +37,16 @@ SLUG_ALIASES = {
 @api_bp.route('/categories', methods=['GET'])
 def get_categories():
     categories = Category.query.filter_by(is_active=True).order_by(Category.display_order.asc()).all()
-    return jsonify([cat.to_dict() for cat in categories])
+    resp = jsonify([cat.to_dict() for cat in categories])
+    resp.headers['Cache-Control'] = PUBLIC_CACHE_CONTROL
+    return resp
 
 @api_bp.route('/destinations', methods=['GET'])
 def get_destinations():
     category_slug = request.args.get('category', '').strip().lower()
     
     query = Destination.query.options(
-        joinedload(Destination.category),
-        selectinload(Destination.gallery),
-        selectinload(Destination.highlights),
-        selectinload(Destination.experiences)
+        joinedload(Destination.category)
     ).filter_by(is_published=True)
     
     if category_slug and category_slug != 'all':
@@ -62,7 +63,9 @@ def get_destinations():
             )
             
     destinations = query.order_by(Destination.display_order.asc(), Destination.id.asc()).all()
-    return jsonify([d.to_dict(include_details=True) for d in destinations])
+    resp = jsonify([d.to_summary_dict() for d in destinations])
+    resp.headers['Cache-Control'] = PUBLIC_CACHE_CONTROL
+    return resp
 
 @api_bp.route('/destinations/<slug>', methods=['GET'])
 def get_destination(slug):
@@ -149,7 +152,9 @@ def get_story(slug):
 @api_bp.route('/site-settings', methods=['GET'])
 def get_site_settings():
     settings = SiteSetting.query.all()
-    return jsonify({s.setting_key: s.setting_value for s in settings})
+    resp = jsonify({s.setting_key: s.setting_value for s in settings})
+    resp.headers['Cache-Control'] = PUBLIC_CACHE_CONTROL
+    return resp
 
 @api_bp.route('/enquiries', methods=['POST'])
 def submit_enquiry():

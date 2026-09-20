@@ -74,51 +74,56 @@ def create_app(config_class=Config):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
         
-    # Automatically ensure tables and schema columns exist
-    with app.app_context():
-        try:
-            db.create_all()
-            # Verify and migrate any new columns on existing tables
-            from sqlalchemy import text
+    # Database schema auto-initialization:
+    # Only runs when explicitly requested via DATABASE_AUTO_INIT=true (e.g. local setup or CI).
+    # In production serverless requests (Vercel), tables are already established and skipping
+    # this eliminates ~2.2 seconds of cold-start DDL latency on every request.
+    auto_init = os.environ.get('DATABASE_AUTO_INIT', '').strip().lower() in ('true', '1', 'yes')
+    if auto_init:
+        with app.app_context():
             try:
-                cols = [r[0] for r in db.session.execute(text('DESCRIBE admins;')).fetchall()]
-                if 'is_active' not in cols:
-                    db.session.execute(text('ALTER TABLE admins ADD COLUMN is_active TINYINT(1) DEFAULT 1 NOT NULL;'))
-                if 'last_login_at' not in cols:
-                    db.session.execute(text('ALTER TABLE admins ADD COLUMN last_login_at DATETIME NULL;'))
-                
-                # Ensure previous_slugs column exists on destinations table
-                dest_cols = [r[0] for r in db.session.execute(text('DESCRIBE destinations;')).fetchall()]
-                if 'previous_slugs' not in dest_cols:
-                    db.session.execute(text('ALTER TABLE destinations ADD COLUMN previous_slugs VARCHAR(500) NULL;'))
-
-                # Expand image columns to VARCHAR(500) for Vercel Blob URLs
-                for alter_sql in [
-                    'ALTER TABLE destinations MODIFY hero_image VARCHAR(500) NULL;',
-                    'ALTER TABLE destinations MODIFY cover_image VARCHAR(500) NULL;',
-                    'ALTER TABLE destination_gallery MODIFY image_url VARCHAR(500) NOT NULL;',
-                    'ALTER TABLE services MODIFY image VARCHAR(500) NULL;',
-                    'ALTER TABLE stories MODIFY image VARCHAR(500) NULL;'
-                ]:
-                    try:
-                        db.session.execute(text(alter_sql))
-                    except Exception:
-                        pass
-
-                # Drop unused cover_image column on categories table if present
+                db.create_all()
+                # Verify and migrate any new columns on existing tables
+                from sqlalchemy import text
                 try:
-                    cat_cols = [r[0] for r in db.session.execute(text('DESCRIBE categories;')).fetchall()]
-                    if 'cover_image' in cat_cols:
-                        db.session.execute(text('ALTER TABLE categories DROP COLUMN cover_image;'))
-                except Exception as cat_drop_err:
-                    print(f"[DB Migration Notice] categories cover_image drop check: {cat_drop_err}")
+                    cols = [r[0] for r in db.session.execute(text('DESCRIBE admins;')).fetchall()]
+                    if 'is_active' not in cols:
+                        db.session.execute(text('ALTER TABLE admins ADD COLUMN is_active TINYINT(1) DEFAULT 1 NOT NULL;'))
+                    if 'last_login_at' not in cols:
+                        db.session.execute(text('ALTER TABLE admins ADD COLUMN last_login_at DATETIME NULL;'))
 
-                db.session.commit()
-            except Exception as migration_err:
-                db.session.rollback()
-                print(f"[DB Migration Notice] Schema check: {migration_err}")
-        except Exception as e:
-            print(f"[DB Init Warning] Could not automatically create tables: {e}")
+                    # Ensure previous_slugs column exists on destinations table
+                    dest_cols = [r[0] for r in db.session.execute(text('DESCRIBE destinations;')).fetchall()]
+                    if 'previous_slugs' not in dest_cols:
+                        db.session.execute(text('ALTER TABLE destinations ADD COLUMN previous_slugs VARCHAR(500) NULL;'))
+
+                    # Expand image columns to VARCHAR(500) for Vercel Blob URLs
+                    for alter_sql in [
+                        'ALTER TABLE destinations MODIFY hero_image VARCHAR(500) NULL;',
+                        'ALTER TABLE destinations MODIFY cover_image VARCHAR(500) NULL;',
+                        'ALTER TABLE destination_gallery MODIFY image_url VARCHAR(500) NOT NULL;',
+                        'ALTER TABLE services MODIFY image VARCHAR(500) NULL;',
+                        'ALTER TABLE stories MODIFY image VARCHAR(500) NULL;'
+                    ]:
+                        try:
+                            db.session.execute(text(alter_sql))
+                        except Exception:
+                            pass
+
+                    # Drop unused cover_image column on categories table if present
+                    try:
+                        cat_cols = [r[0] for r in db.session.execute(text('DESCRIBE categories;')).fetchall()]
+                        if 'cover_image' in cat_cols:
+                            db.session.execute(text('ALTER TABLE categories DROP COLUMN cover_image;'))
+                    except Exception as cat_drop_err:
+                        print(f"[DB Migration Notice] categories cover_image drop check: {cat_drop_err}")
+
+                    db.session.commit()
+                except Exception as migration_err:
+                    db.session.rollback()
+                    print(f"[DB Migration Notice] Schema check: {migration_err}")
+            except Exception as e:
+                print(f"[DB Init Warning] Could not automatically create tables: {e}")
             
     return app
 

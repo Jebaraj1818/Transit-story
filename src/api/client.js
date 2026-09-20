@@ -48,6 +48,8 @@ async function fetchJson(url, options = {}, timeoutMs = 12000) {
 let cachedDestinations = null;
 let cachedJourneyIdeas = null;
 let cachedCategories = null;
+let cachedSiteSettings = null;
+let siteSettingsPromise = null;
 
 /**
  * Categories
@@ -260,30 +262,51 @@ export async function getStoryBySlug(slug) {
 }
 
 /**
- * Site Settings
+ * Site Settings (with module-level caching and in-flight request deduplication)
  */
 export async function getSiteSettings() {
-  try {
-    const data = await fetchJson(`${API_BASE}/site-settings`);
-    if (data && Object.keys(data).length > 0) {
-      return data;
-    }
-  } catch (err) {
-    // Graceful fallback
+  if (cachedSiteSettings && Object.keys(cachedSiteSettings).length > 0) {
+    // Revalidate in background so settings do not stay stale indefinitely
+    fetchJson(`${API_BASE}/site-settings`).then((data) => {
+      if (data && Object.keys(data).length > 0) {
+        cachedSiteSettings = data;
+      }
+    }).catch(() => {});
+    return cachedSiteSettings;
   }
-  return {
-    brand_name: 'The Transit Story',
-    tagline: 'Curated Journeys | Crafted Experiences',
-    contact_phone: '',
-    contact_phone_1: '',
-    contact_phone_2: '',
-    contact_phone_3: '',
-    contact_phone_4: '',
-    contact_email: 'transitstory.in@gmail.com',
-    whatsapp_url: '#',
-    instagram_url: '#',
-    linkedin_url: '#'
-  };
+
+  if (siteSettingsPromise) {
+    return siteSettingsPromise;
+  }
+
+  siteSettingsPromise = (async () => {
+    try {
+      const data = await fetchJson(`${API_BASE}/site-settings`);
+      if (data && Object.keys(data).length > 0) {
+        cachedSiteSettings = data;
+        return data;
+      }
+    } catch (err) {
+      // Graceful fallback
+    } finally {
+      siteSettingsPromise = null;
+    }
+    return {
+      brand_name: 'Transit Story',
+      tagline: 'Curated Journeys | Crafted Experiences',
+      contact_phone: '',
+      contact_phone_1: '',
+      contact_phone_2: '',
+      contact_phone_3: '',
+      contact_phone_4: '',
+      contact_email: 'transitstory.in@gmail.com',
+      whatsapp_url: '#',
+      instagram_url: '#',
+      linkedin_url: '#'
+    };
+  })();
+
+  return siteSettingsPromise;
 }
 
 /**

@@ -3,6 +3,8 @@ import re
 import hashlib
 import secrets
 from datetime import datetime, timedelta
+from sqlalchemy import func
+from sqlalchemy.orm import joinedload, selectinload
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, g
 from backend.config import Config
 from backend.db import db
@@ -165,16 +167,35 @@ def reset_password(token):
 @admin_bp.route('/dashboard')
 @login_required
 def dashboard():
-    total_destinations = Destination.query.count()
-    published_destinations = Destination.query.filter_by(is_published=True).count()
-    total_categories = Category.query.count()
-    total_enquiries = Enquiry.query.count()
-    new_enquiries = Enquiry.query.filter_by(status='new').count()
-    journey_ideas_count = JourneyIdea.query.filter_by(is_active=True).count()
-    total_subscribers = NewsletterSubscriber.query.count()
+    # Consolidate stat counters into a single SQL query using scalar subqueries
+    stats_row = db.session.query(
+        db.session.query(func.count(Destination.id)).scalar_subquery(),
+        db.session.query(func.count(Destination.id)).filter(Destination.is_published == True).scalar_subquery(),
+        db.session.query(func.count(Category.id)).scalar_subquery(),
+        db.session.query(func.count(Enquiry.id)).scalar_subquery(),
+        db.session.query(func.count(Enquiry.id)).filter(Enquiry.status == 'new').scalar_subquery(),
+        db.session.query(func.count(JourneyIdea.id)).filter(JourneyIdea.is_active == True).scalar_subquery(),
+        db.session.query(func.count(NewsletterSubscriber.id)).scalar_subquery(),
+    ).first()
+
+    (
+        total_destinations,
+        published_destinations,
+        total_categories,
+        total_enquiries,
+        new_enquiries,
+        journey_ideas_count,
+        total_subscribers
+    ) = stats_row if stats_row else (0, 0, 0, 0, 0, 0, 0)
     
     recent_enquiries = Enquiry.query.order_by(Enquiry.created_at.desc()).limit(6).all()
-    recent_destinations = Destination.query.order_by(Destination.updated_at.desc()).limit(5).all()
+    recent_destinations = (
+        Destination.query
+        .options(joinedload(Destination.category))
+        .order_by(Destination.updated_at.desc())
+        .limit(5)
+        .all()
+    )
     
     return render_template(
         'dashboard.html',
@@ -246,7 +267,10 @@ def delete_enquiry(enquiry_id):
 @admin_bp.route('/destinations')
 @login_required
 def destinations():
-    dest_list = Destination.query.order_by(Destination.display_order.asc(), Destination.id.asc()).all()
+    dest_list = Destination.query.options(
+        joinedload(Destination.category),
+        selectinload(Destination.gallery)
+    ).order_by(Destination.display_order.asc(), Destination.id.asc()).all()
     return render_template('destinations.html', destinations=dest_list)
 
 @admin_bp.route('/destinations/new', methods=['GET', 'POST'])
@@ -479,7 +503,15 @@ def journey_ideas():
             
         return redirect(url_for('admin.journey_ideas'))
         
-    current_ideas = JourneyIdea.query.join(Destination).order_by(JourneyIdea.display_order.asc()).all()
+    current_ideas = (
+        JourneyIdea.query
+        .options(
+            joinedload(JourneyIdea.destination).joinedload(Destination.category)
+        )
+        .join(Destination)
+        .order_by(JourneyIdea.display_order.asc())
+        .all()
+    )
     current_dest_ids = [i.destination_id for i in current_ideas]
     is_full = len(current_ideas) >= MAX_HOMEPAGE_IDEAS
     
@@ -487,6 +519,7 @@ def journey_ideas():
     # minus those already on the homepage — no category filter applied.
     available_destinations = (
         Destination.query
+        .options(joinedload(Destination.category))
         .filter(
             Destination.is_published == True,
             Destination.id.notin_(current_dest_ids) if current_dest_ids else True

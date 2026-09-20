@@ -160,6 +160,35 @@ class Destination(db.Model):
             
         return res
 
+    def to_summary_dict(self):
+        """Lightweight summary serialization for Tours card directory. Avoids lazy-loading child tables."""
+        cat_slug = self.category.slug if self.category else ('college-educational' if self.is_educational else 'leisure-holiday')
+        cat_name = self.category.name if self.category else ('College & Educational' if self.is_educational else 'Leisure & Holiday')
+        hero_img = self.hero_image or self.cover_image
+
+        return {
+            'id': self.id,
+            'slug': self.slug,
+            'title': self.title,
+            'categoryId': self.category_id,
+            'mainCategory': cat_slug,
+            'categoryName': cat_name,
+            'category': cat_name,
+            'location': self.location,
+            'tag': self.tag,
+            'coverImage': self.cover_image or hero_img,
+            'heroImage': hero_img,
+            'heroPosition': self.hero_position or 'center 40%',
+            'gallery': [],
+            'images': [hero_img] if hero_img else [],
+            'description': self.description,
+            'isEducational': self.is_educational,
+            'isPublished': self.is_published,
+            'displayOrder': self.display_order,
+            'previousSlugs': [s.strip() for s in self.previous_slugs.split(',') if s.strip()] if self.previous_slugs else [],
+            'route': f"/tours/{self.slug}"
+        }
+
 class DestinationGallery(db.Model):
     __tablename__ = 'destination_gallery'
     

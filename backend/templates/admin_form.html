@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Add Administrator' if is_new else 'Edit Administrator' }} — The Transit Story{% endblock %}
+{% block page_title %}{{ 'Add New Administrator' if is_new else 'Edit Administrator Profile' }}{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('admin.admins') }}" class="btn btn-outline btn-sm">
+  &larr; Back to Admin Accounts
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 680px;">
+  <div class="card-header">
+    <h2 class="card-title">{{ 'New Administrator Account' if is_new else 'Update Account: ' ~ admin.name }}</h2>
+    <div style="font-size: 0.8rem; color: #5A6058;">
+      Configure identity, email, role permissions, and access credentials.
+    </div>
+  </div>
+
+  <form method="POST" action="{{ url_for('admin.new_admin') if is_new else url_for('admin.edit_admin', admin_id=admin.id) }}" id="adminAccForm">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="name">Full Name *</label>
+        <input type="text" id="name" name="name" class="form-control" required value="{{ admin.name if admin else '' }}" placeholder="e.g. Anandha Kumar" autofocus>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email Address *</label>
+        <input type="email" id="email" name="email" class="form-control" required value="{{ admin.email if admin else '' }}" placeholder="curator@thetransitstory.com">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="role">Administrative Role *</label>
+        <select id="role" name="role" class="form-control" required>
+          <option value="ADMIN" {% if admin and not admin.is_super_admin %}selected{% endif %}>
+            ADMIN — Standard Curator Access (Enquiries, Tours, Content)
+          </option>
+          <option value="SUPER_ADMIN" {% if admin and admin.is_super_admin %}selected{% endif %}>
+            SUPER_ADMIN — Full Access (Manage Admins, Settings, System)
+          </option>
+        </select>
+        <div style="font-size: 0.72rem; color: #6B7268; margin-top: 0.25rem;">
+          Super Admins can add, edit, or remove other administrator accounts and change site notification settings.
+        </div>
+      </div>
+
+      <div class="form-group" style="display: flex; flex-direction: column; justify-content: center;">
+        <label style="margin-bottom: 0.5rem;">Account Status</label>
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: normal; cursor: pointer;">
+          <input type="checkbox" name="is_active" {% if is_new or (admin and admin.is_active) %}checked{% endif %}>
+          <span>Active (Account enabled for sign in)</span>
+        </label>
+      </div>
+    </div>
+
+    <div style="background: #F6F1E5; border: 1px solid #E0D7BD; border-radius: 3px; padding: 1.25rem; margin: 1.5rem 0 1rem 0;">
+      <div style="font-size: 0.85rem; font-weight: 600; color: #173A2D; margin-bottom: 0.25rem;">
+        {{ 'Account Password *' if is_new else 'Reset / Change Password (Leave blank to keep unchanged)' }}
+      </div>
+      <div style="font-size: 0.75rem; color: #6B7268; margin-bottom: 1rem;">
+        Passwords must be at least 8 characters. Passwords are securely hashed with scrypt/PBKDF2.
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="password">{{ 'Password *' if is_new else 'New Password' }}</label>
+          <input type="password" id="password" name="password" class="form-control" {% if is_new %}required{% endif %} minlength="8" placeholder="••••••••">
+        </div>
+
+        <div class="form-group">
+          <label for="confirm_password">{{ 'Confirm Password *' if is_new else 'Confirm New Password' }}</label>
+          <input type="password" id="confirm_password" name="confirm_password" class="form-control" {% if is_new %}required{% endif %} minlength="8" placeholder="••••••••">
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+      <a href="{{ url_for('admin.admins') }}" class="btn btn-outline">
+        Cancel
+      </a>
+      <button type="submit" class="btn btn-primary">
+        {{ 'Create Administrator →' if is_new else 'Save Administrator Profile →' }}
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

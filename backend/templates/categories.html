@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Tour Categories — The Transit Story{% endblock %}
+{% block page_title %}Tour Categories Management{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;">
+  <!-- Categories List -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Existing Categories ({{ categories|length }})</h2>
+    </div>
+
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Slug</th>
+            <th>Order</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cat in categories %}
+            <tr>
+              <td>
+                <strong>{{ cat.name }}</strong>
+              </td>
+              <td>
+                <code style="font-size: 0.75rem;">{{ cat.slug }}</code>
+              </td>
+              <td>
+                <span style="font-size: 0.8rem; font-weight: 500;">{{ cat.display_order }}</span>
+              </td>
+              <td>
+                <form method="POST" action="{{ url_for('admin.delete_category', cat_id=cat.id) }}" onsubmit="return confirm('Delete category {{ cat.name }}?');" style="display: inline;">
+                  <button type="submit" class="btn btn-outline btn-sm" style="color: #A63A2B;">✕</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create New Category -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Add New Category</h2>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin.categories') }}">
+      <div class="form-group">
+        <label for="name">Category Name *</label>
+        <input type="text" id="name" name="name" class="form-control" required placeholder="e.g. Cultural & Heritage">
+      </div>
+
+      <div class="form-group">
+        <label for="slug">Category Slug (e.g. cultural-heritage)</label>
+        <input type="text" id="slug" name="slug" class="form-control" placeholder="Auto-generated if empty">
+      </div>
+
+      <div class="form-group">
+        <label for="description">Category Description</label>
+        <textarea id="description" name="description" rows="3" class="form-control" placeholder="Short description of this travel theme..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="display_order">Display Order</label>
+        <input type="number" id="display_order" name="display_order" class="form-control" value="{{ (categories|length) + 1 }}">
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          Create Category →
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

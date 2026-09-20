@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Destinations Catalog{% endblock %}
+{% block page_title %}Destinations Catalog{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('admin.new_destination') }}" class="btn btn-gold btn-sm">
+  <span>+ Add New Destination</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">All Destinations ({{ destinations|length }})</h2>
+    <div style="font-size: 0.8rem; color: #5A6058;">
+      Published destinations automatically appear in the <code>/tours</code> directory and get a dedicated page at <code>/tours/:slug</code>.
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Destination</th>
+          <th>Slug</th>
+          <th>Category</th>
+          <th>Gallery</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if destinations %}
+          {% for dest in destinations %}
+            <tr>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  {% if dest.hero_image %}
+                    <img src="{{ dest.hero_image }}" alt="{{ dest.title }}" style="width: 44px; height: 44px; object-fit: cover; border-radius: 2px; border: 1px solid #E3DCBF;">
+                  {% endif %}
+                  <div>
+                    <strong style="font-size: 0.95rem; color: #173A2D;">{{ dest.title }}</strong>
+                    <div style="font-size: 0.75rem; color: #5A6058;">{{ dest.location }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <code style="font-size: 0.75rem; background: #FAF7F0; padding: 0.2rem 0.4rem; border: 1px solid #E3DCBF; border-radius: 2px;">{{ dest.slug }}</code>
+              </td>
+              <td>
+                <span class="badge" style="background-color: #F4EFE3; color: #173A2D; border: 1px solid #E0D8BD;">
+                  {{ dest.category.name if dest.category else 'Unassigned' }}
+                </span>
+              </td>
+              <td>
+                <span style="font-size: 0.8rem; font-weight: 600;">{{ dest.gallery|length }} / 3 images</span>
+              </td>
+              <td>
+                {% if dest.is_educational %}
+                  <span class="badge" style="background-color: #E0E7FF; color: #3730A3;">College IV</span>
+                {% else %}
+                  <span style="font-size: 0.75rem; color: #5A6058;">Leisure / Heritage</span>
+                {% endif %}
+              </td>
+              <td>
+                <form method="POST" action="{{ url_for('admin.toggle_publish_destination', dest_id=dest.id) }}" style="display: inline;">
+                  {% if dest.is_published %}
+                    <button type="submit" class="badge badge-published" style="border: none; cursor: pointer;" title="Click to Unpublish">
+                      ✓ Published
+                    </button>
+                  {% else %}
+                    <button type="submit" class="badge badge-draft" style="border: none; cursor: pointer;" title="Click to Publish">
+                      Draft / Offline
+                    </button>
+                  {% endif %}
+                </form>
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.4rem;">
+                  <a href="http://localhost:3000/tours/{{ dest.slug }}" target="_blank" class="btn btn-outline btn-sm" title="View page on website">↗</a>
+                  <a href="{{ url_for('admin.edit_destination', dest_id=dest.id) }}" class="btn btn-primary btn-sm">Edit</a>
+                  <form method="POST" action="{{ url_for('admin.delete_destination', dest_id=dest.id) }}" onsubmit="return confirm('Delete destination {{ dest.title }}?');" style="display: inline;">
+                    <button type="submit" class="btn btn-outline btn-sm" style="color: #A63A2B;" title="Delete">✕</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="7" style="text-align: center; color: #888; padding: 3rem;">
+              No destinations found.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Curator Overview{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('admin.new_destination') }}" class="btn btn-gold btn-sm">
+  <span>+ New Destination</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Stat Counters -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Destinations</div>
+    <div class="stat-value">{{ stats.total_destinations }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Published Destinations</div>
+    <div class="stat-value" style="color: #065F46;">{{ stats.published_destinations }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Enquiries</div>
+    <div class="stat-value">{{ stats.total_enquiries }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">New / Uncontacted Leads</div>
+    <div class="stat-value" style="color: #C49A45;">{{ stats.new_enquiries }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Journey Ideas (Homepage)</div>
+    <div class="stat-value">{{ stats.journey_ideas_count }}</div>
+  </div>
+</div>
+
+<!-- Two Column Layout: Recent Enquiries (7 cols) + Recent Destinations (5 cols) -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+  <!-- Recent Enquiries -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Recent Travel Inquiries</h2>
+      <a href="{{ url_for('admin.enquiries') }}" class="btn btn-outline btn-sm">View All</a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Customer</th>
+            <th>Phone</th>
+            <th>Type / Destination</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if recent_enquiries %}
+            {% for enq in recent_enquiries %}
+              <tr>
+                <td>
+                  <strong>{{ enq.full_name }}</strong>
+                  <div style="font-size: 0.75rem; color: #5A6058;">{{ enq.email }}</div>
+                </td>
+                <td>
+                  <strong style="color: #173A2D;">{{ enq.phone }}</strong>
+                </td>
+                <td>
+                  {% if enq.destination %}
+                    <span>{{ enq.destination }}</span>
+                  {% else %}
+                    <span style="color: #888;">General Contact</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge badge-{{ enq.status }}">{{ enq.status }}</span>
+                </td>
+                <td>
+                  <a href="{{ url_for('admin.enquiry_detail', enquiry_id=enq.id) }}" class="btn btn-outline btn-sm">View</a>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="5" style="text-align: center; color: #888; padding: 2rem;">No enquiries received yet.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Recent Destinations -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Destination Catalog</h2>
+      <a href="{{ url_for('admin.destinations') }}" class="btn btn-outline btn-sm">Manage All</a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Destination</th>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if recent_destinations %}
+            {% for dest in recent_destinations %}
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    {% if dest.hero_image %}
+                      <img src="{{ dest.hero_image }}" alt="{{ dest.title }}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 2px;">
+                    {% endif %}
+                    <div>
+                      <strong>{{ dest.title }}</strong>
+                      <div style="font-size: 0.72rem; color: #5A6058;">{{ dest.location }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span style="font-size: 0.75rem;">{{ dest.category.name if dest.category else ('College IV' if dest.is_educational else 'Leisure') }}</span>
+                </td>
+                <td>
+                  {% if dest.is_published %}
+                    <span class="badge badge-published">Published</span>
+                  {% else %}
+                    <span class="badge badge-draft">Draft</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url_for('admin.edit_destination', dest_id=dest.id) }}" class="btn btn-outline btn-sm">Edit</a>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="4" style="text-align: center; color: #888; padding: 2rem;">No destinations created yet.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

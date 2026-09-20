@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Frequently Asked Questions — The Transit Story{% endblock %}
+{% block page_title %}FAQs Management{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;">
+  <!-- FAQs List -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Existing FAQs ({{ faqs|length }})</h2>
+    </div>
+
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Question</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for faq in faqs %}
+            <tr>
+              <td style="font-weight: 600;">{{ faq.display_order }}</td>
+              <td>
+                <strong style="color: #173A2D;">{{ faq.question }}</strong>
+                <div style="font-size: 0.75rem; color: #5A6058; margin-top: 0.2rem; line-height: 1.4;">{{ faq.answer[:120] }}...</div>
+              </td>
+              <td>
+                {% if faq.is_published %}
+                  <span class="badge badge-published">Live</span>
+                {% else %}
+                  <span class="badge badge-draft">Draft</span>
+                {% endif %}
+              </td>
+              <td>
+                <form method="POST" action="{{ url_for('admin.delete_faq', faq_id=faq.id) }}" onsubmit="return confirm('Delete this FAQ?');" style="display: inline;">
+                  <button type="submit" class="btn btn-outline btn-sm" style="color: #A63A2B;">✕</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create FAQ -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Add New FAQ Item</h2>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin.faqs') }}">
+      <div class="form-group">
+        <label for="question">Question *</label>
+        <input type="text" id="question" name="question" class="form-control" required placeholder="e.g. Can I customise my trip?">
+      </div>
+
+      <div class="form-group">
+        <label for="answer">Answer *</label>
+        <textarea id="answer" name="answer" rows="5" class="form-control" required placeholder="Clear, authentic explanation..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="display_order">Display Order</label>
+          <input type="number" id="display_order" name="display_order" class="form-control" value="{{ (faqs|length) + 1 }}">
+        </div>
+
+        <div style="display: flex; align-items: center; padding-top: 1rem;">
+          <label class="checkbox-label">
+            <input type="checkbox" name="is_published" value="1" checked>
+            <span>Published on FAQ Page</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          Add FAQ Item →
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

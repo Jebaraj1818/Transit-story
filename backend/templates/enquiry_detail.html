@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Enquiry #{{ enquiry.id }} — The Transit Story{% endblock %}
+{% block page_title %}Enquiry Record #{{ enquiry.id }}{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('admin.enquiries') }}" class="btn btn-outline btn-sm">
+  <span>← Back to Enquiries</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+  <!-- Left: Customer & Travel Details -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Customer & Request Details</h2>
+      <span class="badge badge-{{ enquiry.status }}">{{ enquiry.status.replace('_', ' ') }}</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.9rem;">
+      <div>
+        <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #5A6058; font-weight: 700;">Full Name</div>
+        <div style="font-size: 1.1rem; font-weight: 600; color: #173A2D; margin-top: 0.15rem;">{{ enquiry.full_name }}</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div>
+          <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #5A6058; font-weight: 700;">Phone Number (Mandatory)</div>
+          <div style="font-size: 1rem; font-weight: 700; color: #173A2D; margin-top: 0.15rem;">
+            <a href="tel:{{ enquiry.phone }}" style="color: inherit; text-decoration: none;">{{ enquiry.phone }}</a>
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #5A6058; font-weight: 700;">Email Address</div>
+          <div style="font-size: 0.95rem; color: #173A2D; margin-top: 0.15rem;">
+            <a href="mailto:{{ enquiry.email }}" style="color: inherit;">{{ enquiry.email }}</a>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div>
+          <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #5A6058; font-weight: 700;">Enquiry Type</div>
+          <div style="margin-top: 0.15rem; text-transform: uppercase; font-size: 0.8rem; font-weight: 600;">{{ enquiry.type.replace('_', ' ') }}</div>
+        </div>
+        <div>
+          <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #5A6058; font-weight: 700;">Submission Date</div>
+          <div style="margin-top: 0.15rem; font-size: 0.85rem;">{{ enquiry.created_at.strftime('%d %b %Y, %I:%M %p') if enquiry.created_at else '' }}</div>
+        </div>
+      </div>
+
+      {% if enquiry.destination %}
+      <div>
+        <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #5A6058; font-weight: 700;">Selected Destination / Tour</div>
+        <div style="font-size: 1.05rem; font-weight: 600; color: #C49A45; margin-top: 0.15rem;">{{ enquiry.destination }}</div>
+      </div>
+      {% endif %}
+
+      {% if enquiry.travellers or enquiry.timeframe %}
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div>
+          <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #5A6058; font-weight: 700;">Travelers</div>
+          <div style="margin-top: 0.15rem;">{{ enquiry.travellers or 'Not specified' }}</div>
+        </div>
+        <div>
+          <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #5A6058; font-weight: 700;">Timeframe</div>
+          <div style="margin-top: 0.15rem;">{{ enquiry.timeframe or 'Not specified' }}</div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if enquiry.themes %}
+      <div>
+        <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #5A6058; font-weight: 700;">Themes of Interest</div>
+        <div style="margin-top: 0.15rem; font-size: 0.85rem;">{{ enquiry.themes }}</div>
+      </div>
+      {% endif %}
+
+      <div>
+        <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #5A6058; font-weight: 700;">Customer Note / Message</div>
+        <div style="margin-top: 0.35rem; padding: 1rem; background-color: #FAF8F3; border: 1px solid #E3DCBF; border-radius: 3px; font-size: 0.85rem; line-height: 1.6; white-space: pre-wrap;">{{ enquiry.notes or 'No notes provided.' }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Admin Status & Notes Control -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Curator Desk Status & Notes</h2>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin.enquiry_detail', enquiry_id=enquiry.id) }}">
+      <div class="form-group">
+        <label for="status">Enquiry Lead Status</label>
+        <select id="status" name="status" class="form-control">
+          <option value="new" {% if enquiry.status == 'new' %}selected{% endif %}>New (Uncontacted)</option>
+          <option value="contacted" {% if enquiry.status == 'contacted' %}selected{% endif %}>Contacted / In Discussion</option>
+          <option value="in_planning" {% if enquiry.status == 'in_planning' %}selected{% endif %}>In Planning (Itinerary Building)</option>
+          <option value="confirmed" {% if enquiry.status == 'confirmed' %}selected{% endif %}>Confirmed / Booked</option>
+          <option value="archived" {% if enquiry.status == 'archived' %}selected{% endif %}>Archived / Closed</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="admin_notes">Internal Admin Notes</label>
+        <textarea id="admin_notes" name="admin_notes" rows="8" class="form-control" placeholder="Record customer communication log, customized vehicle requirements, itinerary drafts, or curator thoughts here...">{{ enquiry.admin_notes or '' }}</textarea>
+        <div class="form-hint">These notes are visible only to logged-in admins.</div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 1.5rem;">
+        <button type="submit" class="btn btn-primary">
+          Save Changes
+        </button>
+      </div>
+    </form>
+
+    <div style="margin-top: 2rem; pt-4; border-top: 1px solid #EDE7D5;">
+      <form method="POST" action="{{ url_for('admin.delete_enquiry', enquiry_id=enquiry.id) }}" onsubmit="return confirm('Are you sure you want to delete this enquiry record permanently?');">
+        <button type="submit" class="btn btn-danger btn-sm">
+          Delete Enquiry Record
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

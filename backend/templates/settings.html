@@ -1,0 +1,700 @@
+{% extends "base.html" %}
+
+{% block title %}Site Settings — The Transit Story{% endblock %}
+{% block page_title %}Website & Brand Settings{% endblock %}
+
+{% block content %}
+<div class="card" style="max-w: 800px;">
+  <div class="card-header">
+    <h2 class="card-title">Brand, Contact & Social Settings</h2>
+    <div style="font-size: 0.8rem; color: #5A6058;">
+      Configure client contact information, phone numbers, email inboxes, and social media handles.
+    </div>
+  </div>
+
+  <form method="POST" action="{{ url_for('admin.site_settings') }}">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="brand_name">Brand Name</label>
+        <input type="text" id="brand_name" name="brand_name" class="form-control" value="{{ settings.get('brand_name', 'The Transit Story') }}">
+      </div>
+      <div class="form-group">
+        <label for="tagline">Tagline</label>
+        <input type="text" id="tagline" name="tagline" class="form-control" value="{{ settings.get('tagline', 'Curated Journeys | Crafted Experiences') }}">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="contact_phone">General Telephone / Helpline (Legacy Fallback)</label>
+        <input type="text" id="contact_phone" name="contact_phone" class="form-control" value="{{ settings.get('contact_phone', '') }}" placeholder="+91 98765 43210">
+      </div>
+      <div class="form-group">
+        <label for="contact_email">Official Email Inbox</label>
+        <input type="email" id="contact_email" name="contact_email" class="form-control" value="{{ settings.get('contact_email', '') }}" placeholder="transitstory.in@gmail.com">
+      </div>
+    </div>
+
+    <!-- Transit Story Direct Owner Mobile Numbers -->
+    <div style="margin-top: 1.25rem; margin-bottom: 1.25rem; padding: 1.25rem; background: #FAF8F4; border: 1px solid #E0D7BD; border-radius: 4px;">
+      <div style="margin-bottom: 0.75rem;">
+        <strong style="color: #173A2D; font-size: 0.95rem;">Transit Story Owner & Direct Mobile Lines</strong>
+        <div style="font-size: 0.78rem; color: #5A6058; margin-top: 2px;">
+          Direct mobile numbers displayed on the public Contact page under &ldquo;TELEPHONE&rdquo;. Empty fields will not be displayed on the website.
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="contact_phone_1">Owner Phone 1</label>
+          <input type="text" id="contact_phone_1" name="contact_phone_1" class="form-control" value="{{ settings.get('contact_phone_1', '') }}" placeholder="+91 98765 43210">
+        </div>
+        <div class="form-group">
+          <label for="contact_phone_2">Owner Phone 2</label>
+          <input type="text" id="contact_phone_2" name="contact_phone_2" class="form-control" value="{{ settings.get('contact_phone_2', '') }}" placeholder="+91 98765 43211">
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom: 0;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="contact_phone_3">Owner Phone 3</label>
+          <input type="text" id="contact_phone_3" name="contact_phone_3" class="form-control" value="{{ settings.get('contact_phone_3', '') }}" placeholder="+91 98765 43212">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="contact_phone_4">Owner Phone 4</label>
+          <input type="text" id="contact_phone_4" name="contact_phone_4" class="form-control" value="{{ settings.get('contact_phone_4', '') }}" placeholder="+91 98765 43213">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="whatsapp_url">WhatsApp Direct Chat Link</label>
+        <input type="text" id="whatsapp_url" name="whatsapp_url" class="form-control" value="{{ settings.get('whatsapp_url', '#') }}" placeholder="https://wa.me/919876543210">
+      </div>
+      <div class="form-group">
+        <label for="instagram_url">Instagram Profile URL</label>
+        <input type="text" id="instagram_url" name="instagram_url" class="form-control" value="{{ settings.get('instagram_url', '#') }}" placeholder="https://instagram.com/thetransitstory">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="linkedin_url">LinkedIn Profile URL</label>
+        <input type="text" id="linkedin_url" name="linkedin_url" class="form-control" value="{{ settings.get('linkedin_url', '#') }}" placeholder="https://linkedin.com/company/the-transit-story">
+      </div>
+      <div class="form-group">
+        <label for="headquarters">Headquarters & Operating Region</label>
+        <input type="text" id="headquarters" name="headquarters" class="form-control" value="{{ settings.get('headquarters', 'Tamil Nadu, South India') }}">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="working_hours">Operational Working Hours</label>
+      <input type="text" id="working_hours" name="working_hours" class="form-control" value="{{ settings.get('working_hours', 'Monday – Saturday, 9:00 AM – 6:00 PM IST') }}">
+    </div>
+
+    <!-- Brevo Email & Admin Lead Notification Settings -->
+    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #E3DCBF;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+        <div>
+          <h3 style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.4rem; color: #173A2D; margin: 0;">
+            Brevo Transactional Email & Notifications
+          </h3>
+          <div style="font-size: 0.78rem; color: #5A6058; margin-top: 2px;">
+            Manage Brevo service integration and notification recipients for incoming journey enquiries.
+          </div>
+        </div>
+        <div>
+          {% if brevo_info and brevo_info.is_configured %}
+            <span class="badge badge-published" style="background-color: #FAF3E3; color: #8F6B1E; border: 1px solid #C49A45;">
+              ✓ Brevo API Active
+            </span>
+          {% else %}
+            <span class="badge badge-draft" style="background-color: #EFE9DC; color: #5A6058;">
+              ⚡ Development Mode
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div style="background-color: #F6F1E5; border: 1px solid #E0D7BD; border-radius: 3px; padding: 1rem; margin-bottom: 1.25rem; font-size: 0.8rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem;">
+          <div>
+            <span style="color: #6B7268; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; display: block;">Sender Profile</span>
+            <strong style="color: #173A2D;">{{ brevo_info.sender_name if brevo_info else 'The Transit Story' }} &lt;{{ brevo_info.sender_email if brevo_info else 'transitstory.in@gmail.com' }}&gt;</strong>
+          </div>
+          <div>
+            <span style="color: #6B7268; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; display: block;">API Key Security</span>
+            <span style="color: #2E6B4A; font-weight: 500;">Stored securely in server environment (never exposed to client)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="notification_emails">Admin Notification Recipients (Comma-separated)</label>
+        <input type="text" id="notification_emails" name="notification_emails" class="form-control" value="{{ settings.get('notification_emails', '') }}" placeholder="owner@thetransitstory.com, manager@thetransitstory.com">
+        <div style="font-size: 0.72rem; color: #6B7268; margin-top: 0.35rem;">
+          When travelers submit journey enquiries or contact messages, notifications will be dispatched to these addresses with Reply-To set to the customer. If left empty, notifications are sent to all active administrators.
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- HOMEPAGE HERO MEDIA CONFIGURATION                                          -->
+    <!-- ========================================================================= -->
+    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #E3DCBF;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+        <div>
+          <h3 style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.4rem; color: #173A2D; margin: 0;">
+            Homepage Hero Media
+          </h3>
+          <div style="font-size: 0.78rem; color: #5A6058; margin-top: 2px;">
+            Configure the 3-part cinematic hero sequence on the homepage (Slideshow order: Photo 1 → Video → Photo 2).
+          </div>
+        </div>
+        <div>
+          {% if brevo_info and brevo_info.blob_configured %}
+            <span class="badge badge-published" style="background-color: #FAF3E3; color: #8F6B1E; border: 1px solid #C49A45;">
+              ✓ Vercel Blob Connected
+            </span>
+          {% else %}
+            <span class="badge badge-draft" style="background-color: #EFE9DC; color: #5A6058;">
+              ⚡ Blob Token Unset
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Hero Photo 1 -->
+      <div style="background: #FAF8F4; border: 1px solid #E0D7BD; border-radius: 4px; padding: 1.25rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+            <strong style="color: #173A2D; font-size: 0.95rem;">Homepage Hero Photo 1 (Default: Temple & Heritage)</strong>
+            {% set h1 = settings.get('homepage_hero_photo_1', '').strip() %}
+            {% if h1 and (h1.startswith('http://') or h1.startswith('https://')) and not 'test.public.blob' in h1 %}
+              <span class="badge badge-published" style="background-color: #FAF3E3; color: #8F6B1E; border: 1px solid #C49A45; font-size: 0.68rem; padding: 2px 7px;">✓ Production Blob Configured</span>
+            {% else %}
+              <span class="badge badge-draft" style="background-color: #FBF0DF; color: #A0522D; border: 1px solid #E0B88A; font-size: 0.68rem; padding: 2px 7px;">⚠ Production Blob Missing (Using Local Fallback)</span>
+            {% endif %}
+          </div>
+          <span style="font-size: 0.75rem; color: #6B7268;">Max 4 MB • JPG, PNG, WebP, AVIF</span>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
+          <div style="width: 140px; height: 90px; border: 1px solid #C49A45; border-radius: 3px; overflow: hidden; background: #000; flex-shrink: 0;">
+            <img 
+              id="preview_homepage_hero_photo_1" 
+              src="{{ settings.get('homepage_hero_photo_1') or '/images/hero/hero01.jpg' }}" 
+              alt="Hero Photo 1 Preview" 
+              style="width: 100%; height: 100%; object-fit: cover;"
+              onerror="this.src='/images/hero/hero01.jpg'"
+            >
+          </div>
+          <div style="flex: 1; min-width: 260px;">
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <input 
+                type="text" 
+                id="homepage_hero_photo_1" 
+                name="homepage_hero_photo_1" 
+                class="form-control" 
+                value="{{ settings.get('homepage_hero_photo_1', '') }}" 
+                placeholder="/images/hero/hero01.jpg (Leave empty or set URL)"
+                oninput="document.getElementById('preview_homepage_hero_photo_1').src = this.value || '/images/hero/hero01.jpg'"
+              >
+              <label class="btn btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap; padding: 0.55rem 1rem;">
+                Upload Image
+                <input 
+                  type="file" 
+                  accept="image/jpeg,image/png,image/webp,image/avif" 
+                  style="display: none;" 
+                  onchange="AdminUploader.bindImageUpload({
+                    inputElem: this,
+                    targetInputId: 'homepage_hero_photo_1',
+                    previewImgId: 'preview_homepage_hero_photo_1',
+                    folder: 'homepage/hero',
+                    statusElemId: 'status_hero_photo_1'
+                  })"
+                >
+              </label>
+              <button 
+                type="button" 
+                class="btn" 
+                style="background: #EFE9DC; color: #173A2D; border: 1px solid #D1C7AC; padding: 0.55rem 0.8rem; white-space: nowrap;"
+                onclick="document.getElementById('homepage_hero_photo_1').value = '/images/hero/hero01.jpg'; document.getElementById('preview_homepage_hero_photo_1').src = '/images/hero/hero01.jpg';"
+              >
+                Use Default
+              </button>
+            </div>
+            <div id="status_hero_photo_1" style="font-size: 0.75rem; display: none;"></div>
+            <div style="font-size: 0.72rem; color: #6B7268;">Default fallback path: <code>/images/hero/hero01.jpg</code></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Video -->
+      <div style="background: #FAF8F4; border: 1px solid #E0D7BD; border-radius: 4px; padding: 1.25rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+            <strong style="color: #173A2D; font-size: 0.95rem;">Homepage Hero Video (Direct Client Upload up to 100 MB)</strong>
+            {% set hv = settings.get('homepage_hero_video', '').strip() %}
+            {% if hv and (hv.startswith('http://') or hv.startswith('https://')) and not 'test.public.blob' in hv %}
+              <span class="badge badge-published" style="background-color: #FAF3E3; color: #8F6B1E; border: 1px solid #C49A45; font-size: 0.68rem; padding: 2px 7px;">✓ Production Blob Configured</span>
+            {% else %}
+              <span class="badge badge-draft" style="background-color: #FBF0DF; color: #A0522D; border: 1px solid #E0B88A; font-size: 0.68rem; padding: 2px 7px;">⚠ Production Blob Missing (Using Local Fallback)</span>
+            {% endif %}
+          </div>
+          <span style="font-size: 0.75rem; color: #6B7268;">Max 100 MB • MP4, WebM, MOV</span>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
+          <div style="width: 220px; height: 124px; border: 1px solid #C49A45; border-radius: 3px; overflow: hidden; background: #000; flex-shrink: 0;">
+            <video 
+              id="preview_homepage_hero_video" 
+              src="{{ settings.get('homepage_hero_video') or '/images/hero/hero-vedio-final.mp4' }}" 
+              controls 
+              muted
+              style="width: 100%; height: 100%; object-fit: cover;"
+            ></video>
+          </div>
+          <div style="flex: 1; min-width: 260px;">
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <input 
+                type="text" 
+                id="homepage_hero_video" 
+                name="homepage_hero_video" 
+                class="form-control" 
+                value="{{ settings.get('homepage_hero_video', '') }}" 
+                placeholder="/images/hero/hero-vedio-final.mp4"
+                oninput="document.getElementById('preview_homepage_hero_video').src = this.value || '/images/hero/hero-vedio-final.mp4'"
+              >
+              <label class="btn btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap; padding: 0.55rem 1rem;">
+                Upload Video
+                <input 
+                  type="file" 
+                  accept="video/mp4,video/webm,video/quicktime" 
+                  style="display: none;" 
+                  onchange="AdminUploader.bindVideoUpload({
+                    inputElem: this,
+                    targetInputId: 'homepage_hero_video',
+                    previewVideoId: 'preview_homepage_hero_video',
+                    progressContainerId: 'video_progress_container',
+                    progressBarId: 'video_progress_bar',
+                    progressTextId: 'video_progress_text',
+                    metaElemId: 'video_meta_info',
+                    folder: 'homepage/hero'
+                  })"
+                >
+              </label>
+              <button 
+                type="button" 
+                class="btn" 
+                style="background: #EFE9DC; color: #173A2D; border: 1px solid #D1C7AC; padding: 0.55rem 0.8rem; white-space: nowrap;"
+                onclick="document.getElementById('homepage_hero_video').value = '/images/hero/hero-vedio-final.mp4'; document.getElementById('preview_homepage_hero_video').src = '/images/hero/hero-vedio-final.mp4';"
+              >
+                Use Default
+              </button>
+            </div>
+
+            <!-- Video Upload Progress Bar -->
+            <div id="video_progress_container" style="display: none; margin-top: 0.6rem; margin-bottom: 0.6rem;">
+              <div style="height: 8px; background: #E5DFC9; border-radius: 4px; overflow: hidden;">
+                <div id="video_progress_bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #173A2D, #C49A45); transition: width 0.2s ease;"></div>
+              </div>
+              <div id="video_progress_text" style="font-size: 0.75rem; color: #173A2D; margin-top: 0.35rem; font-weight: 500;"></div>
+              <div id="video_meta_info" style="font-size: 0.72rem; color: #6B7268;"></div>
+            </div>
+
+            <div style="font-size: 0.72rem; color: #6B7268;">
+              Direct client-to-Blob upload ensures large hero video files bypass server limits. Default fallback: <code>/images/hero/hero-vedio-final.mp4</code>.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Photo 2 -->
+      <div style="background: #FAF8F4; border: 1px solid #E0D7BD; border-radius: 4px; padding: 1.25rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+            <strong style="color: #173A2D; font-size: 0.95rem;">Homepage Hero Photo 2 (Default: Cultural Exploration)</strong>
+            {% set h2 = settings.get('homepage_hero_photo_2', '').strip() %}
+            {% if h2 and (h2.startswith('http://') or h2.startswith('https://')) and not 'test.public.blob' in h2 %}
+              <span class="badge badge-published" style="background-color: #FAF3E3; color: #8F6B1E; border: 1px solid #C49A45; font-size: 0.68rem; padding: 2px 7px;">✓ Production Blob Configured</span>
+            {% else %}
+              <span class="badge badge-draft" style="background-color: #FBF0DF; color: #A0522D; border: 1px solid #E0B88A; font-size: 0.68rem; padding: 2px 7px;">⚠ Production Blob Missing (Using Local Fallback)</span>
+            {% endif %}
+          </div>
+          <span style="font-size: 0.75rem; color: #6B7268;">Max 4 MB • JPG, PNG, WebP, AVIF</span>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
+          <div style="width: 140px; height: 90px; border: 1px solid #C49A45; border-radius: 3px; overflow: hidden; background: #000; flex-shrink: 0;">
+            <img 
+              id="preview_homepage_hero_photo_2" 
+              src="{{ settings.get('homepage_hero_photo_2') or '/images/hero/hero-02.jpg' }}" 
+              alt="Hero Photo 2 Preview" 
+              style="width: 100%; height: 100%; object-fit: cover;"
+              onerror="this.src='/images/hero/hero-02.jpg'"
+            >
+          </div>
+          <div style="flex: 1; min-width: 260px;">
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <input 
+                type="text" 
+                id="homepage_hero_photo_2" 
+                name="homepage_hero_photo_2" 
+                class="form-control" 
+                value="{{ settings.get('homepage_hero_photo_2', '') }}" 
+                placeholder="/images/hero/hero-02.jpg"
+                oninput="document.getElementById('preview_homepage_hero_photo_2').src = this.value || '/images/hero/hero-02.jpg'"
+              >
+              <label class="btn btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap; padding: 0.55rem 1rem;">
+                Upload Image
+                <input 
+                  type="file" 
+                  accept="image/jpeg,image/png,image/webp,image/avif" 
+                  style="display: none;" 
+                  onchange="AdminUploader.bindImageUpload({
+                    inputElem: this,
+                    targetInputId: 'homepage_hero_photo_2',
+                    previewImgId: 'preview_homepage_hero_photo_2',
+                    folder: 'homepage/hero',
+                    statusElemId: 'status_hero_photo_2'
+                  })"
+                >
+              </label>
+              <button 
+                type="button" 
+                class="btn" 
+                style="background: #EFE9DC; color: #173A2D; border: 1px solid #D1C7AC; padding: 0.55rem 0.8rem; white-space: nowrap;"
+                onclick="document.getElementById('homepage_hero_photo_2').value = '/images/hero/hero-02.jpg'; document.getElementById('preview_homepage_hero_photo_2').src = '/images/hero/hero-02.jpg';"
+              >
+                Use Default
+              </button>
+            </div>
+            <div id="status_hero_photo_2" style="font-size: 0.75rem; display: none;"></div>
+            <div style="font-size: 0.72rem; color: #6B7268;">Default fallback path: <code>/images/hero/hero-02.jpg</code></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- COLLEGE IV BANNER MEDIA CONFIGURATION                                     -->
+    <!-- ========================================================================= -->
+    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #E3DCBF;">
+      <div style="margin-bottom: 1rem;">
+        <h3 style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.4rem; color: #173A2D; margin: 0;">
+          College IV Banner Media
+        </h3>
+        <div style="font-size: 0.78rem; color: #5A6058; margin-top: 2px;">
+          Configure the 3-slide cinematic industrial visit carousel on the public website.
+        </div>
+      </div>
+
+      <!-- College IV Slide 1 -->
+      <div style="background: #FAF8F4; border: 1px solid #E0D7BD; border-radius: 4px; padding: 1.25rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+            <strong style="color: #173A2D; font-size: 0.95rem;">College IV Slide 1 (Kerala Arts & Crafts Village)</strong>
+            {% set iv1 = settings.get('college_iv_slide_1', '').strip() %}
+            {% if iv1 and (iv1.startswith('http://') or iv1.startswith('https://')) and not 'test.public.blob' in iv1 %}
+              <span class="badge badge-published" style="background-color: #FAF3E3; color: #8F6B1E; border: 1px solid #C49A45; font-size: 0.68rem; padding: 2px 7px;">✓ Production Blob Configured</span>
+            {% else %}
+              <span class="badge badge-draft" style="background-color: #FBF0DF; color: #A0522D; border: 1px solid #E0B88A; font-size: 0.68rem; padding: 2px 7px;">⚠ Production Blob Missing (Using Local Fallback)</span>
+            {% endif %}
+          </div>
+          <span style="font-size: 0.75rem; color: #6B7268;">Max 4 MB • JPG, PNG, WebP, AVIF</span>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
+          <div style="width: 140px; height: 90px; border: 1px solid #C49A45; border-radius: 3px; overflow: hidden; background: #000; flex-shrink: 0;">
+            <img 
+              id="preview_college_iv_slide_1" 
+              src="{{ settings.get('college_iv_slide_1') or '/images/kerala-arts-crafts-village-04.jpg' }}" 
+              alt="College IV Slide 1 Preview" 
+              style="width: 100%; height: 100%; object-fit: cover;"
+              onerror="this.src='/images/kerala-arts-crafts-village-04.jpg'"
+            >
+          </div>
+          <div style="flex: 1; min-width: 260px;">
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <input 
+                type="text" 
+                id="college_iv_slide_1" 
+                name="college_iv_slide_1" 
+                class="form-control" 
+                value="{{ settings.get('college_iv_slide_1', '') }}" 
+                placeholder="/images/kerala-arts-crafts-village-04.jpg"
+                oninput="document.getElementById('preview_college_iv_slide_1').src = this.value || '/images/kerala-arts-crafts-village-04.jpg'"
+              >
+              <label class="btn btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap; padding: 0.55rem 1rem;">
+                Upload Image
+                <input 
+                  type="file" 
+                  accept="image/jpeg,image/png,image/webp,image/avif" 
+                  style="display: none;" 
+                  onchange="AdminUploader.bindImageUpload({
+                    inputElem: this,
+                    targetInputId: 'college_iv_slide_1',
+                    previewImgId: 'preview_college_iv_slide_1',
+                    folder: 'homepage/college-iv',
+                    statusElemId: 'status_college_iv_1'
+                  })"
+                >
+              </label>
+              <button 
+                type="button" 
+                class="btn" 
+                style="background: #EFE9DC; color: #173A2D; border: 1px solid #D1C7AC; padding: 0.55rem 0.8rem; white-space: nowrap;"
+                onclick="document.getElementById('college_iv_slide_1').value = '/images/kerala-arts-crafts-village-04.jpg'; document.getElementById('preview_college_iv_slide_1').src = '/images/kerala-arts-crafts-village-04.jpg';"
+              >
+                Use Default
+              </button>
+            </div>
+            <div id="status_college_iv_1" style="font-size: 0.75rem; display: none;"></div>
+            <div style="font-size: 0.72rem; color: #6B7268;">Default fallback path: <code>/images/kerala-arts-crafts-village-04.jpg</code></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- College IV Slide 2 -->
+      <div style="background: #FAF8F4; border: 1px solid #E0D7BD; border-radius: 4px; padding: 1.25rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+            <strong style="color: #173A2D; font-size: 0.95rem;">College IV Slide 2 (Artisan Architecture & Pavilions)</strong>
+            {% set iv2 = settings.get('college_iv_slide_2', '').strip() %}
+            {% if iv2 and (iv2.startswith('http://') or iv2.startswith('https://')) and not 'test.public.blob' in iv2 %}
+              <span class="badge badge-published" style="background-color: #FAF3E3; color: #8F6B1E; border: 1px solid #C49A45; font-size: 0.68rem; padding: 2px 7px;">✓ Production Blob Configured</span>
+            {% else %}
+              <span class="badge badge-draft" style="background-color: #FBF0DF; color: #A0522D; border: 1px solid #E0B88A; font-size: 0.68rem; padding: 2px 7px;">⚠ Production Blob Missing (Using Local Fallback)</span>
+            {% endif %}
+          </div>
+          <span style="font-size: 0.75rem; color: #6B7268;">Max 4 MB • JPG, PNG, WebP, AVIF</span>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
+          <div style="width: 140px; height: 90px; border: 1px solid #C49A45; border-radius: 3px; overflow: hidden; background: #000; flex-shrink: 0;">
+            <img 
+              id="preview_college_iv_slide_2" 
+              src="{{ settings.get('college_iv_slide_2') or '/images/kerala-arts-crafts-village-01-alt.jpg' }}" 
+              alt="College IV Slide 2 Preview" 
+              style="width: 100%; height: 100%; object-fit: cover;"
+              onerror="this.src='/images/kerala-arts-crafts-village-01-alt.jpg'"
+            >
+          </div>
+          <div style="flex: 1; min-width: 260px;">
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <input 
+                type="text" 
+                id="college_iv_slide_2" 
+                name="college_iv_slide_2" 
+                class="form-control" 
+                value="{{ settings.get('college_iv_slide_2', '') }}" 
+                placeholder="/images/kerala-arts-crafts-village-01-alt.jpg"
+                oninput="document.getElementById('preview_college_iv_slide_2').src = this.value || '/images/kerala-arts-crafts-village-01-alt.jpg'"
+              >
+              <label class="btn btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap; padding: 0.55rem 1rem;">
+                Upload Image
+                <input 
+                  type="file" 
+                  accept="image/jpeg,image/png,image/webp,image/avif" 
+                  style="display: none;" 
+                  onchange="AdminUploader.bindImageUpload({
+                    inputElem: this,
+                    targetInputId: 'college_iv_slide_2',
+                    previewImgId: 'preview_college_iv_slide_2',
+                    folder: 'homepage/college-iv',
+                    statusElemId: 'status_college_iv_2'
+                  })"
+                >
+              </label>
+              <button 
+                type="button" 
+                class="btn" 
+                style="background: #EFE9DC; color: #173A2D; border: 1px solid #D1C7AC; padding: 0.55rem 0.8rem; white-space: nowrap;"
+                onclick="document.getElementById('college_iv_slide_2').value = '/images/kerala-arts-crafts-village-01-alt.jpg'; document.getElementById('preview_college_iv_slide_2').src = '/images/kerala-arts-crafts-village-01-alt.jpg';"
+              >
+                Use Default
+              </button>
+            </div>
+            <div id="status_college_iv_2" style="font-size: 0.75rem; display: none;"></div>
+            <div style="font-size: 0.72rem; color: #6B7268;">Default fallback path: <code>/images/kerala-arts-crafts-village-01-alt.jpg</code></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- College IV Slide 3 -->
+      <div style="background: #FAF8F4; border: 1px solid #E0D7BD; border-radius: 4px; padding: 1.25rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+            <strong style="color: #173A2D; font-size: 0.95rem;">College IV Slide 3 (Koodankulam Nuclear Power Plant)</strong>
+            {% set iv3 = settings.get('college_iv_slide_3', '').strip() %}
+            {% if iv3 and (iv3.startswith('http://') or iv3.startswith('https://')) and not 'test.public.blob' in iv3 %}
+              <span class="badge badge-published" style="background-color: #FAF3E3; color: #8F6B1E; border: 1px solid #C49A45; font-size: 0.68rem; padding: 2px 7px;">✓ Production Blob Configured</span>
+            {% else %}
+              <span class="badge badge-draft" style="background-color: #FBF0DF; color: #A0522D; border: 1px solid #E0B88A; font-size: 0.68rem; padding: 2px 7px;">⚠ Production Blob Missing (Using Local Fallback)</span>
+            {% endif %}
+          </div>
+          <span style="font-size: 0.75rem; color: #6B7268;">Max 4 MB • JPG, PNG, WebP, AVIF</span>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
+          <div style="width: 140px; height: 90px; border: 1px solid #C49A45; border-radius: 3px; overflow: hidden; background: #000; flex-shrink: 0;">
+            <img 
+              id="preview_college_iv_slide_3" 
+              src="{{ settings.get('college_iv_slide_3') or '/images/koodankulam-nuclear-plant-01.jpg' }}" 
+              alt="College IV Slide 3 Preview" 
+              style="width: 100%; height: 100%; object-fit: cover;"
+              onerror="this.src='/images/koodankulam-nuclear-plant-01.jpg'"
+            >
+          </div>
+          <div style="flex: 1; min-width: 260px;">
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <input 
+                type="text" 
+                id="college_iv_slide_3" 
+                name="college_iv_slide_3" 
+                class="form-control" 
+                value="{{ settings.get('college_iv_slide_3', '') }}" 
+                placeholder="/images/koodankulam-nuclear-plant-01.jpg"
+                oninput="document.getElementById('preview_college_iv_slide_3').src = this.value || '/images/koodankulam-nuclear-plant-01.jpg'"
+              >
+              <label class="btn btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap; padding: 0.55rem 1rem;">
+                Upload Image
+                <input 
+                  type="file" 
+                  accept="image/jpeg,image/png,image/webp,image/avif" 
+                  style="display: none;" 
+                  onchange="AdminUploader.bindImageUpload({
+                    inputElem: this,
+                    targetInputId: 'college_iv_slide_3',
+                    previewImgId: 'preview_college_iv_slide_3',
+                    folder: 'homepage/college-iv',
+                    statusElemId: 'status_college_iv_3'
+                  })"
+                >
+              </label>
+              <button 
+                type="button" 
+                class="btn" 
+                style="background: #EFE9DC; color: #173A2D; border: 1px solid #D1C7AC; padding: 0.55rem 0.8rem; white-space: nowrap;"
+                onclick="document.getElementById('college_iv_slide_3').value = '/images/koodankulam-nuclear-plant-01.jpg'; document.getElementById('preview_college_iv_slide_3').src = '/images/koodankulam-nuclear-plant-01.jpg';"
+              >
+                Use Default
+              </button>
+            </div>
+            <div id="status_college_iv_3" style="font-size: 0.75rem; display: none;"></div>
+            <div style="font-size: 0.72rem; color: #6B7268;">Default fallback path: <code>/images/koodankulam-nuclear-plant-01.jpg</code></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #E3DCBF;">
+      <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.5rem;">
+        Save Site & Notification Settings →
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Brevo Email Test Card -->
+<div class="card" style="max-width: 800px; margin-top: 2rem;">
+  <div class="card-header">
+    <div>
+      <h2 class="card-title">Brevo Email Test</h2>
+      <div style="font-size: 0.8rem; color: #5A6058; margin-top: 2px;">
+        Send a test email to verify the current Brevo API and sender configuration.
+      </div>
+    </div>
+  </div>
+
+  <div id="test-email-alert" style="display: none;" class="alert"></div>
+
+  <form id="test-email-form" onsubmit="handleSendTestEmail(event)">
+    <div class="form-group">
+      <label for="test_recipient_email">Test recipient email</label>
+      <input 
+        type="email" 
+        id="test_recipient_email" 
+        name="test_recipient_email" 
+        class="form-control" 
+        placeholder="e.g. curator@thetransitstory.com" 
+        required
+      >
+      <div class="form-hint">
+        Emails will be dispatched using the configured sender <strong>{{ brevo_info.sender_name if brevo_info else 'Transit Story' }} &lt;{{ brevo_info.sender_email if brevo_info else 'transitstory.in@gmail.com' }}&gt;</strong>.
+      </div>
+    </div>
+
+    <div style="margin-top: 1.25rem;">
+      <button type="submit" id="btn-send-test-email" class="btn btn-primary" style="padding: 0.65rem 1.4rem;">
+        <span id="btn-send-test-text">Send Test Email</span>
+        <span id="btn-send-test-loading" style="display: none;">Sending test email...</span>
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+async function handleSendTestEmail(e) {
+  e.preventDefault();
+  const alertBox = document.getElementById('test-email-alert');
+  const emailInput = document.getElementById('test_recipient_email');
+  const btn = document.getElementById('btn-send-test-email');
+  const textSpan = document.getElementById('btn-send-test-text');
+  const loadingSpan = document.getElementById('btn-send-test-loading');
+
+  // Reset alert
+  alertBox.style.display = 'none';
+  alertBox.className = 'alert';
+  alertBox.textContent = '';
+
+  const emailVal = (emailInput.value || '').trim();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailVal || !emailRegex.test(emailVal)) {
+    alertBox.className = 'alert alert-danger';
+    alertBox.textContent = 'Please enter a valid recipient email address.';
+    alertBox.style.display = 'block';
+    emailInput.focus();
+    return;
+  }
+
+  // Set loading state
+  btn.disabled = true;
+  btn.style.opacity = '0.7';
+  btn.style.cursor = 'not-allowed';
+  textSpan.style.display = 'none';
+  loadingSpan.style.display = 'inline';
+
+  try {
+    const response = await fetch("{{ url_for('admin.test_email') }}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ recipient_email: emailVal })
+    });
+
+    const result = await response.json().catch(() => ({ success: false, message: 'Server returned an invalid response.' }));
+
+    if (response.ok && result.success) {
+      alertBox.className = 'alert alert-success';
+      alertBox.textContent = result.message || 'Test email accepted by Brevo.';
+      alertBox.style.display = 'block';
+    } else {
+      alertBox.className = 'alert alert-danger';
+      alertBox.textContent = result.message || result.error || 'Failed to send test email.';
+      alertBox.style.display = 'block';
+    }
+  } catch (err) {
+    alertBox.className = 'alert alert-danger';
+    alertBox.textContent = 'Network error: Could not reach the server. Please try again.';
+    alertBox.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+    textSpan.style.display = 'inline';
+    loadingSpan.style.display = 'none';
+  }
+}
+</script>
+{% endblock %}

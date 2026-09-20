@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Newsletter Subscribers — The Transit Story{% endblock %}
+{% block page_title %}Newsletter Subscribers ({{ subscribers|length }}){% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Subscribed Readers</h2>
+    <div style="font-size: 0.8rem; color: #5A6058;">
+      Subscribers from the homepage "Stories worth travelling for" section.
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Email Address</th>
+          <th>Subscribed Date</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if subscribers %}
+          {% for sub in subscribers %}
+            <tr>
+              <td style="color: #5A6058; font-size: 0.8rem;">{{ loop.index }}</td>
+              <td>
+                <strong style="color: #173A2D;">{{ sub.email }}</strong>
+              </td>
+              <td style="font-size: 0.8rem; color: #5A6058;">
+                {{ sub.created_at.strftime('%d %b %Y, %I:%M %p') if sub.created_at else '' }}
+              </td>
+              <td style="text-align: right;">
+                <form method="POST" action="{{ url_for('admin.delete_subscriber', sub_id=sub.id) }}" onsubmit="return confirm('Remove subscriber {{ sub.email }}?');" style="display: inline;">
+                  <button type="submit" class="btn btn-outline btn-sm" style="color: #A63A2B;">Remove ✕</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="4" style="text-align: center; color: #888; padding: 3rem;">
+              No newsletter subscribers yet.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #F5F0E5;
+    color: #20231F;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    overflow-x: clip;
+    width: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #root {
+    min-height: 100vh;
+    overflow-x: clip;
+    width: 100%;
+  }
+
+  /* Prevent automatic zoom on input focus on iOS Safari */
+  @media screen and (max-width: 768px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    color: #173A2D;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.18;
+  }
+
+  /* Accessible and clean focus states */
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 2px solid #C49A45;
+    outline-offset: 2px;
+  }
+
+  /* Subtle, elegant scrollbar */
+  ::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #F5F0E5;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #DBCFAC;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #C49A45;
+  }
+}
+
+@layer utilities {
+  .editorial-card-border {
+    border: 1px solid rgba(229, 222, 201, 0.85);
+  }
+  
+  .editorial-card-border-hover {
+    border-color: rgba(66, 96, 71, 0.4);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+}
+

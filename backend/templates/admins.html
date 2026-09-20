@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator Accounts — The Transit Story{% endblock %}
+{% block page_title %}Administrator Accounts Management{% endblock %}
+
+{% block topbar_actions %}
+<a href="{{ url_for('admin.new_admin') }}" class="btn btn-primary btn-sm">
+  <span>+ Add Administrator</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <div>
+        <h2 class="card-title">Authorized Administrators ({{ admins|length }})</h2>
+        <div style="font-size: 0.8rem; color: #5A6058; margin-top: 2px;">
+          Manage administrator roles, permissions, active statuses, and account access.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Administrator</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Last Login</th>
+          <th>Created Date</th>
+          <th style="text-align: right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for acc in admins %}
+          <tr>
+            <td>
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background-color: #173A2D; color: #FAF7F0; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.85rem; border: 1px solid #C49A45;">
+                  {{ acc.name[:1] }}
+                </div>
+                <div>
+                  <div style="font-weight: 600; color: #173A2D;">
+                    {{ acc.name }}
+                    {% if acc.id == g.current_admin.id %}
+                      <span style="font-size: 0.7rem; background: #FAF3E3; color: #C49A45; border: 1px solid #E0D7BD; padding: 1px 5px; border-radius: 2px; margin-left: 4px;">You</span>
+                    {% endif %}
+                  </div>
+                  <div style="font-size: 0.75rem; color: #5A6058;">{{ acc.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              {% if acc.is_super_admin %}
+                <span class="badge badge-published" style="background-color: #FAF3E3; color: #8F6B1E; border: 1px solid #C49A45;">
+                  Super Admin
+                </span>
+              {% else %}
+                <span class="badge badge-draft" style="background-color: #EFE9DC; color: #434B41; border: 1px solid #D1C8B2;">
+                  Admin
+                </span>
+              {% endif %}
+            </td>
+            <td>
+              {% if acc.is_active %}
+                <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; font-weight: 600; color: #2E6B4A;">
+                  <span style="width: 7px; height: 7px; border-radius: 50%; background-color: #2E6B4A;"></span>
+                  Active
+                </span>
+              {% else %}
+                <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.78rem; font-weight: 600; color: #A63A2B;">
+                  <span style="width: 7px; height: 7px; border-radius: 50%; background-color: #A63A2B;"></span>
+                  Inactive
+                </span>
+              {% endif %}
+            </td>
+            <td>
+              <span style="font-size: 0.78rem; color: #5A6058;">
+                {{ acc.last_login_at.strftime('%d %b %Y, %I:%M %p') if acc.last_login_at else 'Never logged in' }}
+              </span>
+            </td>
+            <td>
+              <span style="font-size: 0.78rem; color: #5A6058;">
+                {{ acc.created_at.strftime('%d %b %Y') if acc.created_at else '—' }}
+              </span>
+            </td>
+            <td style="text-align: right;">
+              <div style="display: inline-flex; items-center: center; gap: 0.4rem;">
+                <a href="{{ url_for('admin.edit_admin', admin_id=acc.id) }}" class="btn btn-outline btn-sm">
+                  Edit
+                </a>
+
+                {% if acc.id != g.current_admin.id %}
+                  <form method="POST" action="{{ url_for('admin.toggle_admin_status', admin_id=acc.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-outline btn-sm" title="{{ 'Deactivate Admin' if acc.is_active else 'Activate Admin' }}">
+                      {{ 'Deactivate' if acc.is_active else 'Activate' }}
+                    </button>
+                  </form>
+
+                  <form method="POST" action="{{ url_for('admin.delete_admin', admin_id=acc.id) }}" onsubmit="return confirm('Are you sure you want to delete administrator {{ acc.name }} ({{ acc.email }})? This action cannot be undone.');" style="display: inline;">
+                    <button type="submit" class="btn btn-outline btn-sm" style="color: #A63A2B;" title="Delete Admin">
+                      ✕
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Enquiries & Leads{% endblock %}
+{% block page_title %}Enquiries & Travel Requests{% endblock %}
+
+{% block content %}
+<div class="card">
+  <!-- Filters Bar -->
+  <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem;">
+    <!-- Status Tabs -->
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <a href="{{ url_for('admin.enquiries', status='all', type=type_filter) }}" class="btn btn-sm {% if status_filter == 'all' %}btn-primary{% else %}btn-outline{% endif %}">All</a>
+      <a href="{{ url_for('admin.enquiries', status='new', type=type_filter) }}" class="btn btn-sm {% if status_filter == 'new' %}btn-primary{% else %}btn-outline{% endif %}">New</a>
+      <a href="{{ url_for('admin.enquiries', status='contacted', type=type_filter) }}" class="btn btn-sm {% if status_filter == 'contacted' %}btn-primary{% else %}btn-outline{% endif %}">Contacted</a>
+      <a href="{{ url_for('admin.enquiries', status='in_planning', type=type_filter) }}" class="btn btn-sm {% if status_filter == 'in_planning' %}btn-primary{% else %}btn-outline{% endif %}">In Planning</a>
+      <a href="{{ url_for('admin.enquiries', status='confirmed', type=type_filter) }}" class="btn btn-sm {% if status_filter == 'confirmed' %}btn-primary{% else %}btn-outline{% endif %}">Confirmed</a>
+      <a href="{{ url_for('admin.enquiries', status='archived', type=type_filter) }}" class="btn btn-sm {% if status_filter == 'archived' %}btn-primary{% else %}btn-outline{% endif %}">Archived</a>
+    </div>
+
+    <!-- Type Filter -->
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 600; color: #5A6058;">Filter by Type:</span>
+      <select onchange="location.href=this.value" class="form-control" style="width: auto; padding: 0.35rem 0.6rem; font-size: 0.8rem;">
+        <option value="{{ url_for('admin.enquiries', status=status_filter, type='all') }}" {% if type_filter == 'all' %}selected{% endif %}>All Types</option>
+        <option value="{{ url_for('admin.enquiries', status=status_filter, type='journey_request') }}" {% if type_filter == 'journey_request' %}selected{% endif %}>Journey Requests</option>
+        <option value="{{ url_for('admin.enquiries', status=status_filter, type='contact_message') }}" {% if type_filter == 'contact_message' %}selected{% endif %}>General Contact</option>
+        <option value="{{ url_for('admin.enquiries', status=status_filter, type='college_iv') }}" {% if type_filter == 'college_iv' %}selected{% endif %}>College IV</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Customer Name</th>
+          <th>Phone (Required)</th>
+          <th>Email</th>
+          <th>Destination / Subject</th>
+          <th>Travellers / Timeframe</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if enquiries %}
+          {% for enq in enquiries %}
+            <tr>
+              <td style="font-size: 0.75rem; color: #5A6058; white-space: nowrap;">
+                {{ enq.created_at.strftime('%d %b %Y %H:%M') if enq.created_at else '' }}
+              </td>
+              <td>
+                <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; color: #173A2D;">
+                  {{ enq.type.replace('_', ' ') }}
+                </span>
+              </td>
+              <td>
+                <strong>{{ enq.full_name }}</strong>
+              </td>
+              <td>
+                <strong style="color: #173A2D; font-size: 0.85rem;">{{ enq.phone }}</strong>
+              </td>
+              <td style="font-size: 0.8rem;">{{ enq.email }}</td>
+              <td>
+                {% if enq.destination %}
+                  <strong>{{ enq.destination }}</strong>
+                {% else %}
+                  <span style="color: #888;">General Message</span>
+                {% endif %}
+              </td>
+              <td style="font-size: 0.75rem; color: #5A6058;">
+                {% if enq.travellers or enq.timeframe %}
+                  <div>{{ enq.travellers }}</div>
+                  <div>{{ enq.timeframe }}</div>
+                {% else %}
+                  <span>—</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge badge-{{ enq.status }}">{{ enq.status.replace('_', ' ') }}</span>
+              </td>
+              <td>
+                <a href="{{ url_for('admin.enquiry_detail', enquiry_id=enq.id) }}" class="btn btn-outline btn-sm">Manage</a>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="9" style="text-align: center; color: #888; padding: 3rem;">
+              No enquiries match the selected filter.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

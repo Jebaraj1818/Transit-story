@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Stories & Essays — The Transit Story{% endblock %}
+{% block page_title %}Editorial Stories & Dispatches{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;">
+  <!-- Stories List -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Editorial Articles ({{ stories|length }})</h2>
+    </div>
+
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Story</th>
+            <th>Category</th>
+            <th>Author</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for story in stories %}
+            <tr>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                  {% if story.image %}
+                    <img src="{{ story.image }}" alt="{{ story.title }}" style="width: 36px; height: 36px; object-fit: cover; border-radius: 2px;">
+                  {% endif %}
+                  <div>
+                    <strong>{{ story.title }}</strong>
+                    <div style="font-size: 0.72rem; color: #5A6058;">{{ story.date_label }} &middot; {{ story.read_time }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span style="font-size: 0.75rem;">{{ story.category }}</span>
+              </td>
+              <td style="font-size: 0.75rem; color: #5A6058;">{{ story.author }}</td>
+              <td>
+                <form method="POST" action="{{ url_for('admin.delete_story', story_id=story.id) }}" onsubmit="return confirm('Delete this story?');" style="display: inline;">
+                  <button type="submit" class="btn btn-outline btn-sm" style="color: #A63A2B;">✕</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create Story -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Add Editorial Story</h2>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin.stories') }}">
+      <div class="form-group">
+        <label for="title">Title *</label>
+        <input type="text" id="title" name="title" class="form-control" required placeholder="Story headline...">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="category">Category</label>
+          <input type="text" id="category" name="category" class="form-control" placeholder="Cultural Immersion">
+        </div>
+        <div class="form-group">
+          <label for="date_label">Date / Issue</label>
+          <input type="text" id="date_label" name="date_label" class="form-control" placeholder="August 2026">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="read_time">Read Time</label>
+          <input type="text" id="read_time" name="read_time" class="form-control" placeholder="6 min read">
+        </div>
+        <div class="form-group">
+          <label for="author">Author / Byline</label>
+          <input type="text" id="author" name="author" class="form-control" placeholder="Editorial Field Note">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="image">Featured Image URL</label>
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem;">
+          <input type="text" id="image" name="image" class="form-control" placeholder="/images/... or https://...blob.vercel-storage.com/..." oninput="updateStoryPreview(this.value)">
+          <label class="btn btn-outline btn-sm" style="display: flex; align-items: center; gap: 0.25rem; white-space: nowrap; cursor: pointer; margin: 0;" title="Upload featured image">
+            <span>📁 Upload</span>
+            <input type="file" accept="image/*" style="display: none;" onchange="handleUploadStoryImage(this)">
+          </label>
+        </div>
+        <div id="story_preview_container" style="display: none; margin-bottom: 0.5rem; position: relative; border: 1px solid #E0D7BD; border-radius: 3px; overflow: hidden; background: #ECE6D8; max-height: 120px;">
+          <img id="story_preview_img" src="" style="width: 100%; height: 120px; object-fit: cover;" alt="Story Preview">
+          <button type="button" onclick="clearStoryImage()" style="position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 2px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer;">✕</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="excerpt">Short Excerpt *</label>
+        <textarea id="excerpt" name="excerpt" rows="2" class="form-control" required placeholder="Brief introductory summary..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="content">Full Essay Content *</label>
+        <textarea id="content" name="content" rows="6" class="form-control" required placeholder="Full narrative text..."></textarea>
+      </div>
+
+      <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+        <label class="checkbox-label">
+          <input type="checkbox" name="is_published" value="1" checked>
+          <span>Published on Stories Page</span>
+        </label>
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          Publish Story →
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+async function handleUploadStoryImage(inputElem) {
+  if (!inputElem.files || !inputElem.files[0]) return;
+  const file = inputElem.files[0];
+  const targetInput = document.getElementById('image');
+  const btnLabel = inputElem.parentElement.querySelector('span');
+  const originalText = btnLabel.textContent;
+
+  btnLabel.textContent = '⏳';
+  inputElem.parentElement.style.opacity = '0.7';
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('folder', 'stories');
+
+  try {
+    const res = await fetch("{{ url_for('admin.media_upload') }}", {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (res.ok && data.success && data.url) {
+      targetInput.value = data.url;
+      updateStoryPreview(data.url);
+    } else {
+      alert(data.message || 'Upload failed.');
+    }
+  } catch (err) {
+    alert('Network error while uploading image.');
+  } finally {
+    btnLabel.textContent = originalText;
+    inputElem.parentElement.style.opacity = '1';
+    inputElem.value = '';
+  }
+}
+
+function updateStoryPreview(url) {
+  const container = document.getElementById('story_preview_container');
+  const img = document.getElementById('story_preview_img');
+  if (url && url.trim()) {
+    img.src = url.trim();
+    container.style.display = 'block';
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+function clearStoryImage() {
+  document.getElementById('image').value = '';
+  updateStoryPreview('');
+}
+</script>
+{% endblock %}

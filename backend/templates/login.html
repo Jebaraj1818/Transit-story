@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — The Transit Story</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('admin.static', filename='admin.css') }}">
+  <style>
+    body {
+      background-color: #173A2D;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .login-box {
+      background-color: #FAF7F0;
+      border: 1px solid #E3DCBF;
+      border-radius: 4px;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+    .login-brand {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .login-brand img {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: 1px solid #C49A45;
+      margin-bottom: 0.75rem;
+    }
+    .login-title {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: 1.75rem;
+      color: #173A2D;
+      font-weight: 600;
+      line-height: 1.1;
+    }
+    .login-subtitle {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #C49A45;
+      margin-top: 0.25rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <div class="login-brand">
+      <img src="/logo/Transit-logo.jpeg" alt="The Transit Story">
+      <h1 class="login-title">The Transit Story</h1>
+      <div class="login-subtitle">Curator Desk & Admin</div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('admin.login', next=request.args.get('next')) }}" id="loginForm">
+      <div class="form-group">
+        <label for="email">Admin Email</label>
+        <input type="email" id="email" name="email" class="form-control" required placeholder="admin@thetransitstory.com" autofocus>
+      </div>
+
+      <div class="form-group">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.35rem;">
+          <label for="password" style="margin-bottom: 0;">Password</label>
+          <a href="{{ url_for('admin.forgot_password') }}" style="font-size: 0.75rem; color: #173A2D; text-decoration: underline; text-underline-offset: 2px;">
+            Forgot Password?
+          </a>
+        </div>
+        <div style="position: relative;">
+          <input type="password" id="password" name="password" class="form-control" required placeholder="••••••••" style="padding-right: 2.5rem;">
+          <button type="button" id="togglePasswordBtn" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: #6B7268; cursor: pointer; font-size: 0.8rem; padding: 0.25rem 0.5rem;" aria-label="Toggle password visibility">
+            👁️
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.75rem;">
+        <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">
+          <span id="btnText">Sign In to Curator Desk →</span>
+          <span id="btnSpinner" style="display: none;">Signing in...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const passwordInput = document.getElementById('password');
+    const toggleBtn = document.getElementById('togglePasswordBtn');
+    const form = document.getElementById('loginForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+
+    if (toggleBtn && passwordInput) {
+      toggleBtn.addEventListener('click', () => {
+        if (passwordInput.type === 'password') {
+          passwordInput.type = 'text';
+          toggleBtn.textContent = '🙈';
+        } else {
+          passwordInput.type = 'password';
+          toggleBtn.textContent = '👁️';
+        }
+      });
+    }
+
+    if (form && submitBtn) {
+      form.addEventListener('submit', () => {
+        submitBtn.disabled = true;
+        btnText.style.display = 'none';
+        btnSpinner.style.display = 'inline-block';
+      });
+    }
+  </script>
+</body>
+</html>

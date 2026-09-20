@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Homepage Journey Ideas Curator{% endblock %}
+{% block page_title %}Homepage Journey Ideas Curation{% endblock %}
+
+{% block content %}
+<div class="card" style="background-color: #FAF6EC; border-color: #E0D8BD;">
+  <div style="display: flex; align-items: flex-start; gap: 1rem;">
+    <div style="font-size: 1.5rem; color: #C49A45;">✦</div>
+    <div style="flex: 1;">
+      <h3 style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.25rem; color: #173A2D; font-weight: 600; margin-bottom: 0.25rem;">
+        Homepage Editorial Rule
+      </h3>
+      <p style="font-size: 0.85rem; color: #5A6058; line-height: 1.5; margin-bottom: 0.5rem;">
+        Newly created destinations do <strong>NOT</strong> automatically appear on the homepage. They are added to the general <code>/tours</code> catalog and dedicated destination pages.
+        Only destinations explicitly selected and ordered in this list will appear in the <strong>Journey Ideas</strong> section on the homepage.
+      </p>
+      <p style="font-size: 0.85rem; color: #5A6058; line-height: 1.5;">
+        The dropdown includes <strong>all active destinations</strong> from the complete Tours catalog, across every category — not filtered by type.
+        The homepage is capped at a maximum of <strong>{{ max_ideas }} destinations</strong>.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Slot usage counter -->
+<div style="
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: {% if is_full %}#FDECEA{% else %}#EFF6F2{% endif %};
+  border: 1px solid {% if is_full %}#E8B4B0{% else %}#B4D9C4{% endif %};
+  border-radius: 8px;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1.5rem;
+">
+  <div style="display: flex; align-items: center; gap: 0.6rem;">
+    <span style="font-size: 1.25rem;">{% if is_full %}⚠️{% else %}✅{% endif %}</span>
+    <div>
+      <strong style="color: {% if is_full %}#A63A2B{% else %}#173A2D{% endif %}; font-size: 0.95rem;">
+        {% if is_full %}
+          Homepage is full — {{ current_ideas|length }}/{{ max_ideas }} slots used
+        {% else %}
+          {{ current_ideas|length }}/{{ max_ideas }} slots used
+        {% endif %}
+      </strong>
+      <div style="font-size: 0.78rem; color: #5A6058; margin-top: 0.1rem;">
+        {% if is_full %}
+          Remove an existing destination before adding a new one.
+        {% else %}
+          {{ max_ideas - current_ideas|length }} slot{{ 's' if (max_ideas - current_ideas|length) != 1 else '' }} available.
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <!-- Visual progress bar -->
+  <div style="display: flex; gap: 4px; flex-shrink: 0;">
+    {% for i in range(max_ideas) %}
+      <div style="
+        width: 18px; height: 10px; border-radius: 2px;
+        background-color: {% if i < current_ideas|length %}{% if is_full %}#A63A2B{% else %}#2E7D52{% endif %}{% else %}#D5D0C0{% endif %};
+        transition: background-color 0.2s;
+      "></div>
+    {% endfor %}
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;">
+  <!-- Currently Curated on Homepage -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Curated for Homepage ({{ current_ideas|length }}/{{ max_ideas }})</h2>
+    </div>
+
+    {% if current_ideas %}
+      <form method="POST" action="{{ url_for('admin.journey_ideas') }}">
+        <input type="hidden" name="action" value="reorder">
+        
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 70px;">Order</th>
+                <th>Destination</th>
+                <th>Category</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for idea in current_ideas %}
+                <tr>
+                  <td>
+                    <input type="number" name="order_{{ idea.id }}" value="{{ idea.display_order }}" class="form-control" style="width: 54px; padding: 0.25rem 0.4rem; font-size: 0.8rem; text-align: center;">
+                  </td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 0.6rem;">
+                      {% if idea.destination.hero_image %}
+                        <img src="{{ idea.destination.hero_image }}" alt="{{ idea.destination.title }}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 2px;">
+                      {% endif %}
+                      <div>
+                        <strong>{{ idea.destination.title }}</strong>
+                        <div style="font-size: 0.72rem; color: #5A6058;">{{ idea.destination.location }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span style="font-size: 0.75rem;">{{ idea.destination.category.name if idea.destination.category else 'Unassigned' }}</span>
+                  </td>
+                  <td style="text-align: right;">
+                    <button type="submit" form="remove-form-{{ idea.id }}" class="btn btn-outline btn-sm" style="color: #A63A2B;" title="Remove from homepage">
+                      Remove ✕
+                    </button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top: 1.25rem; text-align: right;">
+          <button type="submit" class="btn btn-primary btn-sm">
+            Save Display Order
+          </button>
+        </div>
+      </form>
+
+      <!-- Individual Hidden Remove Forms -->
+      {% for idea in current_ideas %}
+        <form id="remove-form-{{ idea.id }}" method="POST" action="{{ url_for('admin.journey_ideas') }}" style="display: none;">
+          <input type="hidden" name="action" value="remove">
+          <input type="hidden" name="idea_id" value="{{ idea.id }}">
+        </form>
+      {% endfor %}
+    {% else %}
+      <div style="text-align: center; color: #888; padding: 3rem;">
+        No destinations are currently selected for the homepage.
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Add Destination to Homepage -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Add Destination to Homepage</h2>
+    </div>
+
+    {% if is_full %}
+      <!-- Homepage is at max capacity -->
+      <div style="
+        background: #FDECEA;
+        border: 1px solid #E8B4B0;
+        border-radius: 6px;
+        padding: 1.5rem;
+        text-align: center;
+        margin-bottom: 1rem;
+      ">
+        <div style="font-size: 1.75rem; margin-bottom: 0.5rem;">🚫</div>
+        <strong style="color: #A63A2B; font-size: 0.95rem; display: block; margin-bottom: 0.4rem;">
+          Homepage is full ({{ max_ideas }}/{{ max_ideas }})
+        </strong>
+        <p style="font-size: 0.82rem; color: #5A6058; line-height: 1.5; margin: 0;">
+          The homepage already has the maximum of <strong>{{ max_ideas }}</strong> Journey Ideas.<br>
+          Remove one from the list on the left before adding a new destination.
+        </p>
+      </div>
+      <!-- Show disabled form for reference but don't allow submit -->
+      {% if available_destinations %}
+        <form>
+          <div class="form-group">
+            <label for="destination_id_disabled" style="color: #999;">Select Destination from Catalog</label>
+            <select id="destination_id_disabled" class="form-control" disabled style="opacity: 0.5; cursor: not-allowed;">
+              <option value="">Choose a destination... (remove one first)</option>
+              {% for dest in available_destinations %}
+                <option value="{{ dest.id }}">
+                  {{ dest.title }} — {{ dest.location }}{% if dest.category %} [{{ dest.category.name }}]{% endif %}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div style="margin-top: 1.5rem;">
+            <button type="button" class="btn btn-gold" style="width: 100%; opacity: 0.4; cursor: not-allowed;" disabled>
+              + Add to Homepage Journey Ideas
+            </button>
+          </div>
+        </form>
+      {% endif %}
+
+    {% elif available_destinations %}
+      <form method="POST" action="{{ url_for('admin.journey_ideas') }}">
+        <input type="hidden" name="action" value="add">
+
+        <div class="form-group">
+          <label for="destination_id">
+            Select Destination from Catalog
+            <span style="font-size: 0.75rem; color: #5A6058; font-weight: normal; margin-left: 0.4rem;">
+              — all active destinations, any category
+            </span>
+          </label>
+          <select id="destination_id" name="destination_id" class="form-control" required>
+            <option value="">Choose a destination...</option>
+            {% set ns = namespace(current_cat=None) %}
+            {% for dest in available_destinations %}
+              {% set cat_name = dest.category.name if dest.category else 'Uncategorised' %}
+              {% if cat_name != ns.current_cat %}
+                {% if ns.current_cat is not none %}
+                  </optgroup>
+                {% endif %}
+                <optgroup label="{{ cat_name }}">
+                {% set ns.current_cat = cat_name %}
+              {% endif %}
+              <option value="{{ dest.id }}">
+                {{ dest.title }} — {{ dest.location }}
+              </option>
+            {% endfor %}
+            {% if ns.current_cat is not none %}
+              </optgroup>
+            {% endif %}
+          </select>
+          <div style="font-size: 0.75rem; color: #5A6058; margin-top: 0.35rem;">
+            Showing {{ available_destinations|length }} available destination{{ 's' if available_destinations|length != 1 else '' }} from the Tours catalog.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="display_order">Display Position Weight (e.g. 1, 2, 3...)</label>
+          <input type="number" id="display_order" name="display_order" class="form-control" value="{{ (current_ideas|length) + 1 }}">
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+          <button type="submit" class="btn btn-gold" style="width: 100%;">
+            + Add to Homepage Journey Ideas
+          </button>
+        </div>
+      </form>
+
+    {% else %}
+      <div style="text-align: center; color: #5A6058; padding: 2rem; font-size: 0.85rem;">
+        All active destinations from the Tours catalog are already featured in the homepage Journey Ideas.
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

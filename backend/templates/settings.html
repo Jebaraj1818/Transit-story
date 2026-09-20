@@ -148,7 +148,7 @@
             Homepage Hero Media
           </h3>
           <div style="font-size: 0.78rem; color: #5A6058; margin-top: 2px;">
-            Configure the 3-part cinematic hero sequence on the homepage (Slideshow order: Photo 1 → Video → Photo 2).
+            Configure the 3 active image slides on the homepage (Slideshow order: Photo 1 → Photo 2 → Photo 3).
           </div>
         </div>
         <div>
@@ -230,19 +230,153 @@
         </div>
       </div>
 
-      <!-- Hero Video -->
+      <!-- Hero Photo 2 -->
       <div style="background: #FAF8F4; border: 1px solid #E0D7BD; border-radius: 4px; padding: 1.25rem; margin-bottom: 1.25rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
           <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
-            <strong style="color: #173A2D; font-size: 0.95rem;">Homepage Hero Video (Direct Client Upload up to 100 MB)</strong>
-            {% set hv = settings.get('homepage_hero_video', '').strip() %}
-            {% if hv and (hv.startswith('http://') or hv.startswith('https://')) and not 'test.public.blob' in hv %}
+            <strong style="color: #173A2D; font-size: 0.95rem;">Homepage Hero Photo 2 (Default: Scenic Mountain Landscape)</strong>
+            {% set h2 = settings.get('homepage_hero_photo_2', '').strip() %}
+            {% if h2 and (h2.startswith('http://') or h2.startswith('https://')) and not 'test.public.blob' in h2 %}
               <span class="badge badge-published" style="background-color: #FAF3E3; color: #8F6B1E; border: 1px solid #C49A45; font-size: 0.68rem; padding: 2px 7px;">✓ Production Blob Configured</span>
             {% else %}
               <span class="badge badge-draft" style="background-color: #FBF0DF; color: #A0522D; border: 1px solid #E0B88A; font-size: 0.68rem; padding: 2px 7px;">⚠ Production Blob Missing (Using Local Fallback)</span>
             {% endif %}
           </div>
+          <span style="font-size: 0.75rem; color: #6B7268;">Max 4 MB • JPG, PNG, WebP, AVIF</span>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
+          <div style="width: 140px; height: 90px; border: 1px solid #C49A45; border-radius: 3px; overflow: hidden; background: #000; flex-shrink: 0;">
+            <img 
+              id="preview_homepage_hero_photo_2" 
+              src="{{ settings.get('homepage_hero_photo_2') or '/images/hero/hero-video-poster.jpg' }}" 
+              alt="Hero Photo 2 Preview" 
+              style="width: 100%; height: 100%; object-fit: cover;"
+              onerror="this.src='/images/hero/hero-video-poster.jpg'"
+            >
+          </div>
+          <div style="flex: 1; min-width: 260px;">
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <input 
+                type="text" 
+                id="homepage_hero_photo_2" 
+                name="homepage_hero_photo_2" 
+                class="form-control" 
+                value="{{ settings.get('homepage_hero_photo_2', '') }}" 
+                placeholder="/images/hero/hero-video-poster.jpg (Leave empty or set URL)"
+                oninput="document.getElementById('preview_homepage_hero_photo_2').src = this.value || '/images/hero/hero-video-poster.jpg'"
+              >
+              <label class="btn btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap; padding: 0.55rem 1rem;">
+                Upload Image
+                <input 
+                  type="file" 
+                  accept="image/jpeg,image/png,image/webp,image/avif" 
+                  style="display: none;" 
+                  onchange="AdminUploader.bindImageUpload({
+                    inputElem: this,
+                    targetInputId: 'homepage_hero_photo_2',
+                    previewImgId: 'preview_homepage_hero_photo_2',
+                    folder: 'homepage/hero',
+                    statusElemId: 'status_hero_photo_2'
+                  })"
+                >
+              </label>
+              <button 
+                type="button" 
+                class="btn" 
+                style="background: #EFE9DC; color: #173A2D; border: 1px solid #D1C7AC; padding: 0.55rem 0.8rem; white-space: nowrap;"
+                onclick="document.getElementById('homepage_hero_photo_2').value = '/images/hero/hero-video-poster.jpg'; document.getElementById('preview_homepage_hero_photo_2').src = '/images/hero/hero-video-poster.jpg';"
+              >
+                Use Default
+              </button>
+            </div>
+            <div id="status_hero_photo_2" style="font-size: 0.75rem; display: none;"></div>
+            <div style="font-size: 0.72rem; color: #6B7268;">Default fallback path: <code>/images/hero/hero-video-poster.jpg</code></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Photo 3 -->
+      <div style="background: #FAF8F4; border: 1px solid #E0D7BD; border-radius: 4px; padding: 1.25rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+            <strong style="color: #173A2D; font-size: 0.95rem;">Homepage Hero Photo 3 (Default: Cultural Exploration)</strong>
+            {% set h3 = settings.get('homepage_hero_photo_3', '').strip() %}
+            {% if h3 and (h3.startswith('http://') or h3.startswith('https://')) and not 'test.public.blob' in h3 %}
+              <span class="badge badge-published" style="background-color: #FAF3E3; color: #8F6B1E; border: 1px solid #C49A45; font-size: 0.68rem; padding: 2px 7px;">✓ Production Blob Configured</span>
+            {% else %}
+              <span class="badge badge-draft" style="background-color: #FBF0DF; color: #A0522D; border: 1px solid #E0B88A; font-size: 0.68rem; padding: 2px 7px;">⚠ Production Blob Missing (Using Local Fallback)</span>
+            {% endif %}
+          </div>
+          <span style="font-size: 0.75rem; color: #6B7268;">Max 4 MB • JPG, PNG, WebP, AVIF</span>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
+          <div style="width: 140px; height: 90px; border: 1px solid #C49A45; border-radius: 3px; overflow: hidden; background: #000; flex-shrink: 0;">
+            <img 
+              id="preview_homepage_hero_photo_3" 
+              src="{{ settings.get('homepage_hero_photo_3') or '/images/hero/hero-02.jpg' }}" 
+              alt="Hero Photo 3 Preview" 
+              style="width: 100%; height: 100%; object-fit: cover;"
+              onerror="this.src='/images/hero/hero-02.jpg'"
+            >
+          </div>
+          <div style="flex: 1; min-width: 260px;">
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <input 
+                type="text" 
+                id="homepage_hero_photo_3" 
+                name="homepage_hero_photo_3" 
+                class="form-control" 
+                value="{{ settings.get('homepage_hero_photo_3', '') }}" 
+                placeholder="/images/hero/hero-02.jpg (Leave empty or set URL)"
+                oninput="document.getElementById('preview_homepage_hero_photo_3').src = this.value || '/images/hero/hero-02.jpg'"
+              >
+              <label class="btn btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap; padding: 0.55rem 1rem;">
+                Upload Image
+                <input 
+                  type="file" 
+                  accept="image/jpeg,image/png,image/webp,image/avif" 
+                  style="display: none;" 
+                  onchange="AdminUploader.bindImageUpload({
+                    inputElem: this,
+                    targetInputId: 'homepage_hero_photo_3',
+                    previewImgId: 'preview_homepage_hero_photo_3',
+                    folder: 'homepage/hero',
+                    statusElemId: 'status_hero_photo_3'
+                  })"
+                >
+              </label>
+              <button 
+                type="button" 
+                class="btn" 
+                style="background: #EFE9DC; color: #173A2D; border: 1px solid #D1C7AC; padding: 0.55rem 0.8rem; white-space: nowrap;"
+                onclick="document.getElementById('homepage_hero_photo_3').value = '/images/hero/hero-02.jpg'; document.getElementById('preview_homepage_hero_photo_3').src = '/images/hero/hero-02.jpg';"
+              >
+                Use Default
+              </button>
+            </div>
+            <div id="status_hero_photo_3" style="font-size: 0.75rem; display: none;"></div>
+            <div style="font-size: 0.72rem; color: #6B7268;">Default fallback path: <code>/images/hero/hero-02.jpg</code></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Homepage Hero Video — Future Use -->
+      <div style="background: #F8F7F4; border: 1px dashed #D0C9B5; border-radius: 4px; padding: 1.25rem; margin-bottom: 1.25rem; opacity: 0.92;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+            <strong style="color: #4A524A; font-size: 0.95rem;">Homepage Hero Video — Future Use (Currently Inactive)</strong>
+            <span class="badge" style="background-color: #EFE9DC; color: #5A6058; border: 1px solid #D1C7AC; font-size: 0.68rem; padding: 2px 7px;">Archived / Future Use</span>
+            {% set hv = settings.get('homepage_hero_video', '').strip() %}
+            {% if hv and (hv.startswith('http://') or hv.startswith('https://')) and not 'test.public.blob' in hv %}
+              <span class="badge badge-published" style="background-color: #FAF3E3; color: #8F6B1E; border: 1px solid #C49A45; font-size: 0.68rem; padding: 2px 7px;">✓ Production Blob Configured</span>
+            {% endif %}
+          </div>
           <span style="font-size: 0.75rem; color: #6B7268;">Max 100 MB • MP4, WebM, MOV</span>
+        </div>
+        <div style="font-size: 0.75rem; color: #6B7268; margin-bottom: 0.75rem;">
+          The customer-facing homepage hero currently displays a 3-part image sequence (Photo 1 → Photo 2 → Photo 3). This video setting and its upload functionality are preserved here for future activation or campaign use.
         </div>
         
         <div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
@@ -306,72 +440,6 @@
             <div style="font-size: 0.72rem; color: #6B7268;">
               Direct client-to-Blob upload ensures large hero video files bypass server limits. Default fallback: <code>/images/hero/hero-vedio-final.mp4</code>.
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Hero Photo 2 -->
-      <div style="background: #FAF8F4; border: 1px solid #E0D7BD; border-radius: 4px; padding: 1.25rem; margin-bottom: 1.25rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-          <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
-            <strong style="color: #173A2D; font-size: 0.95rem;">Homepage Hero Photo 2 (Default: Cultural Exploration)</strong>
-            {% set h2 = settings.get('homepage_hero_photo_2', '').strip() %}
-            {% if h2 and (h2.startswith('http://') or h2.startswith('https://')) and not 'test.public.blob' in h2 %}
-              <span class="badge badge-published" style="background-color: #FAF3E3; color: #8F6B1E; border: 1px solid #C49A45; font-size: 0.68rem; padding: 2px 7px;">✓ Production Blob Configured</span>
-            {% else %}
-              <span class="badge badge-draft" style="background-color: #FBF0DF; color: #A0522D; border: 1px solid #E0B88A; font-size: 0.68rem; padding: 2px 7px;">⚠ Production Blob Missing (Using Local Fallback)</span>
-            {% endif %}
-          </div>
-          <span style="font-size: 0.75rem; color: #6B7268;">Max 4 MB • JPG, PNG, WebP, AVIF</span>
-        </div>
-        
-        <div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
-          <div style="width: 140px; height: 90px; border: 1px solid #C49A45; border-radius: 3px; overflow: hidden; background: #000; flex-shrink: 0;">
-            <img 
-              id="preview_homepage_hero_photo_2" 
-              src="{{ settings.get('homepage_hero_photo_2') or '/images/hero/hero-02.jpg' }}" 
-              alt="Hero Photo 2 Preview" 
-              style="width: 100%; height: 100%; object-fit: cover;"
-              onerror="this.src='/images/hero/hero-02.jpg'"
-            >
-          </div>
-          <div style="flex: 1; min-width: 260px;">
-            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem;">
-              <input 
-                type="text" 
-                id="homepage_hero_photo_2" 
-                name="homepage_hero_photo_2" 
-                class="form-control" 
-                value="{{ settings.get('homepage_hero_photo_2', '') }}" 
-                placeholder="/images/hero/hero-02.jpg"
-                oninput="document.getElementById('preview_homepage_hero_photo_2').src = this.value || '/images/hero/hero-02.jpg'"
-              >
-              <label class="btn btn-secondary" style="margin: 0; cursor: pointer; white-space: nowrap; padding: 0.55rem 1rem;">
-                Upload Image
-                <input 
-                  type="file" 
-                  accept="image/jpeg,image/png,image/webp,image/avif" 
-                  style="display: none;" 
-                  onchange="AdminUploader.bindImageUpload({
-                    inputElem: this,
-                    targetInputId: 'homepage_hero_photo_2',
-                    previewImgId: 'preview_homepage_hero_photo_2',
-                    folder: 'homepage/hero',
-                    statusElemId: 'status_hero_photo_2'
-                  })"
-                >
-              </label>
-              <button 
-                type="button" 
-                class="btn" 
-                style="background: #EFE9DC; color: #173A2D; border: 1px solid #D1C7AC; padding: 0.55rem 0.8rem; white-space: nowrap;"
-                onclick="document.getElementById('homepage_hero_photo_2').value = '/images/hero/hero-02.jpg'; document.getElementById('preview_homepage_hero_photo_2').src = '/images/hero/hero-02.jpg';"
-              >
-                Use Default
-              </button>
-            </div>
-            <div id="status_hero_photo_2" style="font-size: 0.75rem; display: none;"></div>
-            <div style="font-size: 0.72rem; color: #6B7268;">Default fallback path: <code>/images/hero/hero-02.jpg</code></div>
           </div>
         </div>
       </div>

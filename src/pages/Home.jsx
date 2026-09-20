@@ -27,18 +27,7 @@ import { DESTINATIONS } from '../data/destinations';
 import { subscribeNewsletter, getJourneyIdeas, getSiteSettings, getCategories } from '../api/client';
 import { resolveMediaUrl } from '../utils/media';
 
-// Main Homepage Hero Slideshow Configuration
-export const HERO_VIDEO_MOBILE = '/images/hero/hero-vedio-final.mp4'; // Vertical mobile video
-export const HERO_VIDEO_DESKTOP_CANDIDATES = [
-  '/images/hero/hero-video-desktop.mp4',
-  '/images/hero/hero-vedio-desktop.mp4',
-  '/images/hero/hero-video-landscape.mp4',
-  '/images/hero/hero-vedio-landscape.mp4',
-  '/images/hero/hero-video-wide.mp4',
-  '/images/hero/hero-vedio-wide.mp4',
-];
-
-// Order: 1. Photo (5s) -> 2. Video (plays until ended event) -> 3. Photo (5s) -> Loop
+// Order: 1. Photo (5s) -> 2. Photo (5s) -> 3. Photo (5s) -> Loop
 const DEFAULT_HERO_SLIDES = [
   {
     id: 'hero-photo-1',
@@ -49,14 +38,15 @@ const DEFAULT_HERO_SLIDES = [
     duration: 5000,
   },
   {
-    id: 'hero-video',
-    type: 'video',
-    src: HERO_VIDEO_MOBILE,
-    fallback: HERO_VIDEO_MOBILE,
-    alt: 'Cinematic journey through South Indian landscapes and roads',
+    id: 'hero-photo-2',
+    type: 'image',
+    src: '/images/hero/hero-video-poster.jpg',
+    fallback: '/images/hero/hero-video-poster.jpg',
+    alt: 'Scenic mountain landscape and winding hill roads',
+    duration: 5000,
   },
   {
-    id: 'hero-photo-2',
+    id: 'hero-photo-3',
     type: 'image',
     src: '/images/hero/hero-02.jpg',
     fallback: '/images/hero/hero-02.jpg',
@@ -101,71 +91,7 @@ export default function Home() {
   const [heroSlides, setHeroSlides] = useState(DEFAULT_HERO_SLIDES);
   const [collegeIvSlides, setCollegeIvSlides] = useState(DEFAULT_COLLEGE_IV_SLIDES);
   const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
-  const heroVideoRef = useRef(null);
   const heroTouchStartX = useRef(null);
-
-  // Responsive viewport tracking for hero video source (Mobile < 768px vs Desktop/Tablet >= 768px)
-  const [isDesktop, setIsDesktop] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth >= 768;
-    }
-    return false;
-  });
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 768);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Check availability of candidate desktop landscape video files
-  const [desktopVideoUrl, setDesktopVideoUrl] = useState(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const probeDesktopVideos = async () => {
-      for (const candidate of HERO_VIDEO_DESKTOP_CANDIDATES) {
-        try {
-          const res = await fetch(candidate, { method: 'HEAD' });
-          if (res.ok && isMounted) {
-            setDesktopVideoUrl(candidate);
-            return;
-          }
-        } catch {
-          // Probe next candidate
-        }
-      }
-    };
-
-    probeDesktopVideos();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  // Compute active video URL based on viewport and landscape video presence
-  const activeHeroVideo = isDesktop && desktopVideoUrl ? desktopVideoUrl : HERO_VIDEO_MOBILE;
-  const isUsingLandscapeVideo = isDesktop && Boolean(desktopVideoUrl);
-
-  // Synchronize heroSlides whenever activeHeroVideo updates
-  useEffect(() => {
-    setHeroSlides((prevSlides) =>
-      prevSlides.map((slide) => {
-        if (slide.type === 'video') {
-          return {
-            ...slide,
-            src: activeHeroVideo,
-            fallback: HERO_VIDEO_MOBILE,
-          };
-        }
-        return slide;
-      })
-    );
-  }, [activeHeroVideo]);
 
   // Dynamically load media from SiteSettings with seamless fallback to committed local assets
   useEffect(() => {
@@ -175,11 +101,8 @@ export default function Home() {
         if (!isMounted || !settings) return;
 
         const photo1 = resolveMediaUrl(settings.homepage_hero_photo_1, '/images/hero/hero01.jpg');
-        const customVideo = settings.homepage_hero_video
-          ? resolveMediaUrl(settings.homepage_hero_video)
-          : null;
-        const video = customVideo || activeHeroVideo;
-        const photo2 = resolveMediaUrl(settings.homepage_hero_photo_2, '/images/hero/hero-02.jpg');
+        const photo2 = resolveMediaUrl(settings.homepage_hero_photo_2, '/images/hero/hero-video-poster.jpg');
+        const photo3 = resolveMediaUrl(settings.homepage_hero_photo_3, '/images/hero/hero-02.jpg');
 
         setHeroSlides([
           {
@@ -191,16 +114,17 @@ export default function Home() {
             duration: 5000,
           },
           {
-            id: 'hero-video',
-            type: 'video',
-            src: video,
-            fallback: HERO_VIDEO_MOBILE,
-            alt: 'Cinematic journey through South Indian landscapes and roads',
-          },
-          {
             id: 'hero-photo-2',
             type: 'image',
             src: photo2,
+            fallback: '/images/hero/hero-video-poster.jpg',
+            alt: 'Scenic mountain landscape and winding hill roads',
+            duration: 5000,
+          },
+          {
+            id: 'hero-photo-3',
+            type: 'image',
+            src: photo3,
             fallback: '/images/hero/hero-02.jpg',
             alt: 'Cultural exploration and curated travel destinations',
             duration: 5000,
@@ -276,59 +200,28 @@ export default function Home() {
     heroTouchStartX.current = null;
   };
 
-  // Preload hero images to eliminate image decode lag during slide transitions
+  // Targeted preload for upcoming slide image shortly before needed (avoiding eager download on initial mount)
   useEffect(() => {
-    heroSlides.forEach((slide) => {
-      if (slide.type === 'image') {
-        const img = new Image();
-        img.src = slide.src;
-      }
-    });
-  }, [heroSlides]);
+    const nextIdx = (currentHeroSlide + 1) % heroSlides.length;
+    const nextSlide = heroSlides[nextIdx];
+    if (nextSlide && nextSlide.type === 'image') {
+      const img = new Image();
+      img.src = nextSlide.src;
+    }
+  }, [currentHeroSlide, heroSlides]);
 
-  // Slideshow Timing & Video Playback Lifecycle
+  // Slideshow Timing Lifecycle (5s per slide with crossfade)
   useEffect(() => {
     const activeSlide = heroSlides[currentHeroSlide];
     if (!activeSlide) return;
 
-    if (activeSlide.type === 'video') {
-      if (heroVideoRef.current) {
-        heroVideoRef.current.currentTime = 0;
-        const playPromise = heroVideoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((err) => {
-            console.warn('Hero video autoplay notice:', err);
-          });
-        }
-      }
+    const photoTimer = setTimeout(() => {
+      nextHeroSlide();
+    }, activeSlide.duration || 5000);
 
-      // Safety fail-safe timeout in case browser blocks playback or 'ended' event
-      const safetyTimer = setTimeout(() => {
-        nextHeroSlide();
-      }, 25000);
-
-      return () => {
-        clearTimeout(safetyTimer);
-      };
-    } else {
-      // Photo slide active:
-      // Allow video to smoothly crossfade out on its last rendered frame
-      // Pause gently after crossfade completes (without seeking to 0, preventing decoder stalls)
-      const pauseTimer = setTimeout(() => {
-        if (heroVideoRef.current && !heroVideoRef.current.paused) {
-          heroVideoRef.current.pause();
-        }
-      }, 1100);
-
-      const photoTimer = setTimeout(() => {
-        nextHeroSlide();
-      }, activeSlide.duration || 5000);
-
-      return () => {
-        clearTimeout(pauseTimer);
-        clearTimeout(photoTimer);
-      };
-    }
+    return () => {
+      clearTimeout(photoTimer);
+    };
   }, [currentHeroSlide, nextHeroSlide, heroSlides]);
 
   // Interactive Services State
@@ -568,7 +461,7 @@ export default function Home() {
         onTouchStart={handleHeroTouchStart}
         onTouchEnd={handleHeroTouchEnd}
       >
-        {/* MEDIA LAYER: Cinematic Crossfade Slideshow (Photo 1 -> Video -> Photo 2) */}
+        {/* MEDIA LAYER: Cinematic Crossfade Slideshow (Photo 1 -> Photo 2 -> Photo 3) */}
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
           {heroSlides.map((slide, idx) => {
             const isActive = idx === currentHeroSlide;
@@ -580,56 +473,30 @@ export default function Home() {
                 }`}
                 aria-hidden={!isActive}
               >
-                {slide.type === 'image' ? (
-                  <img
-                    src={slide.src}
-                    alt={slide.alt}
-                    loading="eager"
-                    decoding="async"
-                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center transform scale-100"
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      minWidth: '100%',
-                      minHeight: '100%',
-                      objectFit: 'cover',
-                      objectPosition: 'center',
-                    }}
-                    onError={(e) => {
-                      if (slide.fallback && e.currentTarget.src !== slide.fallback && !e.currentTarget.src.endsWith(slide.fallback)) {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = slide.fallback;
-                      }
-                    }}
-                  />
-                ) : (
-                  <video
-                    ref={heroVideoRef}
-                    key={slide.src || activeHeroVideo}
-                    muted
-                    playsInline
-                    preload="auto"
-                    onEnded={nextHeroSlide}
-                    className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover transform-gpu"
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      minWidth: '100%',
-                      minHeight: '100%',
-                      // Desktop (≥768px): anchor to mountain zone (85% down the frame)
-                      // Mobile (<768px): centered crop — already correct
-                      objectPosition: isDesktop ? 'center 85%' : 'center center',
-                    }}
-                  >
-                    <source src={slide.src || activeHeroVideo} type="video/mp4" />
-                  </video>
-                )}
+                <img
+                  src={slide.src}
+                  alt={slide.alt}
+                  loading={idx === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center transform scale-100"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    minWidth: '100%',
+                    minHeight: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                  }}
+                  onError={(e) => {
+                    if (slide.fallback && e.currentTarget.src !== slide.fallback && !e.currentTarget.src.endsWith(slide.fallback)) {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = slide.fallback;
+                    }
+                  }}
+                />
               </div>
             );
           })}
@@ -1006,6 +873,8 @@ export default function Home() {
                     key={activeService}
                     src={servicesList[activeService].image}
                     alt={servicesList[activeService].title}
+                    loading="lazy"
+                    decoding="async"
                     initial={{ opacity: 0, scale: 1.04 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.98 }}

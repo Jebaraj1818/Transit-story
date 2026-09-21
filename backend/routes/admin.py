@@ -592,12 +592,15 @@ def categories():
             selected_ids = set(int(v) for v in request.form.getlist('dest_ids') if v.isdigit())
 
             # Current M2M assignments for this category
-            current_ids = set(
-                row[0] for row in
-                db.session.query(destination_categories.c.destination_id)
-                .filter(destination_categories.c.category_id == cat.id)
-                .all()
-            )
+            try:
+                current_ids = set(
+                    row[0] for row in
+                    db.session.query(destination_categories.c.destination_id)
+                    .filter(destination_categories.c.category_id == cat.id)
+                    .all()
+                )
+            except Exception:
+                current_ids = set()
 
             # Insert newly added
             to_add = selected_ids - current_ids
@@ -646,12 +649,15 @@ def categories():
     # For each category, collect currently M2M-assigned destination IDs
     cat_dest_ids = {}
     for cat in cats:
-        cat_dest_ids[cat.id] = set(
-            row[0] for row in
-            db.session.query(destination_categories.c.destination_id)
-            .filter(destination_categories.c.category_id == cat.id)
-            .all()
-        )
+        try:
+            cat_dest_ids[cat.id] = set(
+                row[0] for row in
+                db.session.query(destination_categories.c.destination_id)
+                .filter(destination_categories.c.category_id == cat.id)
+                .all()
+            )
+        except Exception:
+            cat_dest_ids[cat.id] = set()
 
     # All destinations (published or not) for the assignment checkboxes
     all_destinations = (

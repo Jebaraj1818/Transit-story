@@ -33,7 +33,7 @@
               <td><code style="font-size: 0.75rem;">{{ cat.slug }}</code></td>
               <td><span style="font-size: 0.8rem; font-weight: 500;">{{ cat.display_order }}</span></td>
               <td>
-                {% set m2m_count = cat_dest_ids.get(cat.id, set())|length %}
+                {% set m2m_count = cat_dest_ids.get(cat.id, [])|length %}
                 <button type="button" class="btn btn-outline btn-sm" onclick="toggleAssignPanel({{ cat.id }})" style="font-size:0.75rem;">
                   Manage Destinations
                   {% if m2m_count > 0 %}
@@ -60,7 +60,7 @@
                   </div>
                   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0.4rem 1rem;margin-bottom:1rem;">
                     {% for dest in all_destinations %}
-                      {% set is_checked = dest.id in cat_dest_ids.get(cat.id, set()) %}
+                      {% set is_checked = dest.id in cat_dest_ids.get(cat.id, []) %}
                       <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer;padding:0.25rem 0.35rem;border-radius:2px;{% if is_checked %}background:#EEF4F0;{% endif %}">
                         <input type="checkbox" name="dest_ids" value="{{ dest.id }}" {% if is_checked %}checked{% endif %}>
                         <span>{{ dest.title }}{% if dest.category %} <span style="font-size:0.7rem;color:#8A9A88;">({{ dest.category.name }})</span>{% endif %}</span>

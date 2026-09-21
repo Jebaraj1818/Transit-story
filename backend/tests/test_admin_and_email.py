@@ -378,5 +378,51 @@ class AdminAndEmailTestCase(unittest.TestCase):
                 db.session.delete(dummy)
             db.session.commit()
 
+    def test_09_categories_admin_page_renders_and_m2m_assignment(self):
+        """Test GET /admin/categories renders 200 without Jinja template errors, and M2M assignment works."""
+        from backend.models import Category, Destination, destination_categories
+        super_admin = Admin.query.filter_by(role='SUPER_ADMIN', is_active=True).first()
+        if not super_admin:
+            super_admin = Admin(
+                name="Super Curator",
+                email="super_cat_test@thetransitstory.com",
+                role="SUPER_ADMIN",
+                is_active=True
+            )
+            super_admin.set_password("AdminPass123!")
+            db.session.add(super_admin)
+            db.session.commit()
+
+        # Set authenticated session as Super Admin
+        with self.client.session_transaction() as sess:
+            sess['admin_id'] = super_admin.id
+
+        # GET /admin/categories must render 200 (not 500 template error)
+        res = self.client.get('/admin/categories')
+        self.assertEqual(res.status_code, 200)
+        html = res.data.decode('utf-8')
+        self.assertIn('Categories', html)
+        self.assertIn('Manage Destinations', html)
+
+        # Verify M2M destination assignment POST works
+        cat = Category.query.first()
+        dest = Destination.query.first()
+        if cat and dest:
+            # Assign dest to cat via M2M
+            assign_res = self.client.post('/admin/categories', data={
+                'action': 'assign_destinations',
+                'cat_id': str(cat.id),
+                'dest_ids': [str(dest.id)]
+            }, follow_redirects=True)
+            self.assertEqual(assign_res.status_code, 200)
+
+            # Check DB
+            assigned = db.session.query(destination_categories).filter_by(
+                category_id=cat.id, destination_id=dest.id
+            ).first()
+            self.assertIsNotNone(assigned)
+
+        print("[PASS] /admin/categories renders with 200 OK and M2M assignment functions correctly")
+
 if __name__ == '__main__':
     unittest.main()

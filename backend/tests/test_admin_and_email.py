@@ -424,5 +424,87 @@ class AdminAndEmailTestCase(unittest.TestCase):
 
         print("[PASS] /admin/categories renders with 200 OK and M2M assignment functions correctly")
 
+    def test_10_category_order_editing(self):
+        """Test editable category display order: input presence, save_order POST, DB update, sorting, and validation."""
+        from backend.models import Category, Destination, destination_categories
+        super_admin = Admin.query.filter_by(role='SUPER_ADMIN', is_active=True).first()
+        with self.client.session_transaction() as sess:
+            sess['admin_id'] = super_admin.id
+
+        cats = Category.query.order_by(Category.id.asc()).limit(2).all()
+        if len(cats) < 2:
+            return
+
+        cat1, cat2 = cats[0], cats[1]
+        orig_order1 = cat1.display_order
+        orig_order2 = cat2.display_order
+
+        # Count existing M2M assignments before order change
+        m2m_count_before = db.session.query(destination_categories).count()
+        dest_cat_before = [(d.id, d.category_id) for d in Destination.query.all()]
+
+        try:
+            # 1. Load /admin/categories and verify editable order inputs & Save Order button are present
+            res = self.client.get('/admin/categories')
+            self.assertEqual(res.status_code, 200)
+            html = res.data.decode('utf-8')
+            self.assertIn('Save Order', html)
+            self.assertIn(f'name="order_{cat1.id}"', html)
+            self.assertIn(f'name="order_{cat2.id}"', html)
+            self.assertIn('type="number"', html)
+
+            # 2. Test invalid order validation (<= 0 or non-numeric)
+            res_invalid = self.client.post('/admin/categories', data={
+                'action': 'save_order',
+                'cat_ids': [str(cat1.id)],
+                f'order_{cat1.id}': '0'
+            }, follow_redirects=True)
+            self.assertEqual(res_invalid.status_code, 200)
+            invalid_html = res_invalid.data.decode('utf-8')
+            self.assertIn('positive integer', invalid_html.lower())
+
+            # 3. Submit valid changed order values (e.g. cat1 -> 25, cat2 -> 15)
+            new_order1 = 25
+            new_order2 = 15
+            res_save = self.client.post('/admin/categories', data={
+                'action': 'save_order',
+                'cat_ids': [str(cat1.id), str(cat2.id)],
+                f'order_{cat1.id}': str(new_order1),
+                f'order_{cat2.id}': str(new_order2)
+            }, follow_redirects=True)
+            self.assertEqual(res_save.status_code, 200)
+            save_html = res_save.data.decode('utf-8')
+            self.assertIn('updated successfully', save_html.lower())
+
+            # 4. Verify database values changed
+            db.session.expire_all()
+            cat1_reloaded = Category.query.get(cat1.id)
+            cat2_reloaded = Category.query.get(cat2.id)
+            self.assertEqual(cat1_reloaded.display_order, new_order1)
+            self.assertEqual(cat2_reloaded.display_order, new_order2)
+
+            # 5. Verify category list is subsequently sorted according to the saved order (cat2 before cat1)
+            sorted_cats = Category.query.filter(Category.id.in_([cat1.id, cat2.id])).order_by(Category.display_order.asc()).all()
+            self.assertEqual(sorted_cats[0].id, cat2.id)
+            self.assertEqual(sorted_cats[1].id, cat1.id)
+
+            # 6. Verify destination primary and secondary assignments remain unchanged
+            m2m_count_after = db.session.query(destination_categories).count()
+            self.assertEqual(m2m_count_before, m2m_count_after)
+            dest_cat_after = [(d.id, d.category_id) for d in Destination.query.all()]
+            self.assertEqual(dest_cat_before, dest_cat_after)
+
+            print("[PASS] Category order editing: inputs, validation, DB persistence, sorting, and assignment integrity")
+
+        finally:
+            # Restore original display orders
+            c1 = Category.query.get(cat1.id)
+            c2 = Category.query.get(cat2.id)
+            if c1:
+                c1.display_order = orig_order1
+            if c2:
+                c2.display_order = orig_order2
+            db.session.commit()
+
 if __name__ == '__main__':
     unittest.main()

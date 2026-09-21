@@ -623,6 +623,54 @@ def categories():
             flash(f"Destinations updated for category \u2018{cat.name}\u2019.", "success")
             return redirect(url_for('admin.categories'))
 
+        elif action == 'save_order':
+            # Update display_order for existing categories
+            cat_ids = request.form.getlist('cat_ids')
+            if not cat_ids:
+                cat_ids = [k.replace('order_', '') for k in request.form.keys() if k.startswith('order_')]
+
+            updates = []
+            errors = []
+
+            for cid_str in cat_ids:
+                try:
+                    cid = int(cid_str)
+                except (ValueError, TypeError):
+                    continue
+
+                val_str = request.form.get(f'order_{cid}', '').strip()
+                if not val_str:
+                    errors.append(f"Order value for category #{cid} cannot be empty.")
+                    continue
+
+                try:
+                    val = int(val_str)
+                    if val < 1:
+                        errors.append(f"Order value must be a positive integer (got {val}).")
+                        continue
+                except (ValueError, TypeError):
+                    errors.append(f"Order value '{val_str}' must be a valid positive integer.")
+                    continue
+
+                updates.append((cid, val))
+
+            if errors:
+                flash(f"Failed to update category order: {errors[0]}", "danger")
+                return redirect(url_for('admin.categories'))
+
+            if not updates:
+                flash("No categories found to update.", "info")
+                return redirect(url_for('admin.categories'))
+
+            for cid, new_order in updates:
+                c = Category.query.get(cid)
+                if c:
+                    c.display_order = new_order
+
+            db.session.commit()
+            flash("Category display order updated successfully.", "success")
+            return redirect(url_for('admin.categories'))
+
         else:
             # Default: create new category
             name = request.form.get('name', '').strip()

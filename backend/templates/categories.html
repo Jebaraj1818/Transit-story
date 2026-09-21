@@ -31,42 +31,69 @@
       <table class="admin-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Slug</th>
-            <th style="width: 90px;">Order</th>
-            <th>Multi-Category</th>
-            <th>Actions</th>
+            <th style="min-width: 150px;">Category Name</th>
+            <th style="min-width: 130px;">Slug</th>
+            <th style="width: 110px; text-align: center;">Category Order</th>
+            <th style="min-width: 280px;">Assigned Destinations</th>
+            <th style="width: 60px;">Actions</th>
           </tr>
         </thead>
         <tbody>
           {% for cat in categories %}
+            {% set cat_dests = cat_destinations.get(cat.id, []) %}
             <tr>
-              <td><strong>{{ cat.name }}</strong></td>
-              <td><code style="font-size: 0.75rem;">{{ cat.slug }}</code></td>
-              <td>
+              <td style="vertical-align: top; padding-top: 0.85rem;">
+                <strong>{{ cat.name }}</strong>
+                {% if cat.description %}
+                  <div style="font-size: 0.75rem; color: #737A71; margin-top: 2px;">{{ cat.description }}</div>
+                {% endif %}
+              </td>
+              <td style="vertical-align: top; padding-top: 0.85rem;"><code style="font-size: 0.75rem;">{{ cat.slug }}</code></td>
+              <td style="text-align: center; vertical-align: top; padding-top: 0.85rem;">
                 <input type="hidden" name="cat_ids" value="{{ cat.id }}" form="order-form">
-                <input
-                  type="number"
-                  name="order_{{ cat.id }}"
-                  value="{{ cat.display_order }}"
-                  min="1"
-                  step="1"
-                  required
-                  form="order-form"
-                  style="width: 58px; padding: 0.25rem 0.35rem; font-size: 0.85rem; font-weight: 500; text-align: center; border: 1px solid #D5CEBA; border-radius: 2px; background: #fff; color: #173A2D;"
-                  aria-label="Display order for {{ cat.name }}"
-                >
+                <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 3px;">
+                  <input
+                    type="number"
+                    name="order_{{ cat.id }}"
+                    value="{{ cat.display_order }}"
+                    min="1"
+                    step="1"
+                    required
+                    form="order-form"
+                    style="width: 58px; padding: 0.25rem 0.35rem; font-size: 0.85rem; font-weight: 600; text-align: center; border: 1px solid #D5CEBA; border-radius: 2px; background: #fff; color: #173A2D;"
+                    aria-label="Category Order for {{ cat.name }}"
+                  >
+                  <span style="font-size: 0.65rem; color: #8A9A88; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500;">Order</span>
+                </div>
               </td>
-              <td>
-                {% set m2m_count = cat_dest_ids.get(cat.id, [])|length %}
-                <button type="button" class="btn btn-outline btn-sm" onclick="toggleAssignPanel({{ cat.id }})" style="font-size:0.75rem;">
-                  Manage Destinations
-                  {% if m2m_count > 0 %}
-                    <span style="background:#C49A45;color:#fff;border-radius:2px;padding:1px 5px;margin-left:4px;font-size:0.7rem;">{{ m2m_count }}</span>
-                  {% endif %}
-                </button>
+              <td style="vertical-align: top; padding-top: 0.85rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.4rem;">
+                  <span style="font-size: 0.82rem; font-weight: 600; color: #173A2D;">
+                    Destinations: <span style="background: #E8EFEA; color: #173A2D; padding: 1px 7px; border-radius: 10px; font-size: 0.75rem; font-weight: 700;">{{ cat_dests|length }}</span>
+                  </span>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="toggleAssignPanel({{ cat.id }})" style="font-size: 0.75rem; padding: 2px 8px;">
+                    Manage Destinations
+                  </button>
+                </div>
+
+                {% if cat_dests|length > 0 %}
+                  <ul style="margin: 0; padding: 0 0 0 1.1rem; font-size: 0.78rem; color: #3A423B; line-height: 1.5;">
+                    {% for dest in cat_dests %}
+                      <li>
+                        {{ dest.title }}
+                        {% if dest.category_id == cat.id %}
+                          <span style="font-size: 0.68rem; color: #7B857A; font-style: italic;">(Primary)</span>
+                        {% else %}
+                          <span style="font-size: 0.68rem; color: #B38628; font-style: italic;">(Multi)</span>
+                        {% endif %}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <span style="font-size: 0.75rem; color: #8C948B; font-style: italic;">No destinations assigned.</span>
+                {% endif %}
               </td>
-              <td>
+              <td style="vertical-align: top; padding-top: 0.85rem;">
                 <form method="POST" action="{{ url_for('admin.delete_category', cat_id=cat.id) }}" onsubmit="return confirm('Delete category {{ cat.name }}?');" style="display:inline;">
                   <button type="submit" class="btn btn-outline btn-sm" style="color:#A63A2B;">✕</button>
                 </form>

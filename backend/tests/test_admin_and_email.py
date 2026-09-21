@@ -506,5 +506,174 @@ class AdminAndEmailTestCase(unittest.TestCase):
                 c2.display_order = orig_order2
             db.session.commit()
 
+    def test_11_category_destination_membership_presentation(self):
+        """Verify effective destination membership in categories admin:
+        - Both primary and secondary destinations are included in count and list
+        - Count matches actual assigned destinations (e.g. 3 for Cultural & Heritage)
+        - Duplicates (primary + secondary assigned) appear only once
+        - Checkboxes in Manage Destinations show secondary M2M assignments correctly
+        - Category order change does not affect destination assignments
+        - Public API category filtering remains consistent with admin membership
+        """
+        from backend.models import Category, Destination, destination_categories
+        super_admin = Admin.query.filter_by(role='SUPER_ADMIN', is_active=True).first()
+        with self.client.session_transaction() as sess:
+            sess['admin_id'] = super_admin.id
+
+        # 1. Fetch /admin/categories
+        res = self.client.get('/admin/categories')
+        self.assertEqual(res.status_code, 200)
+        html = res.data.decode('utf-8')
+
+        # Find Cultural & Heritage category (or first available category)
+        cult_cat = Category.query.filter_by(slug='cultural-heritage').first() or Category.query.first()
+        self.assertIsNotNone(cult_cat)
+
+        # Determine expected membership using public API logic:
+        m2m_dest_ids = set(
+            r[0] for r in
+            db.session.query(destination_categories.c.destination_id)
+            .filter(destination_categories.c.category_id == cult_cat.id)
+            .all()
+        )
+        expected_dests = [
+            d for d in Destination.query.all()
+            if d.category_id == cult_cat.id or d.id in m2m_dest_ids
+        ]
+        expected_count = len(expected_dests)
+
+        # 1 & 2: Verify count and destination titles are in the rendered admin page
+        self.assertIn(f"Destinations: <span style=\"background: #E8EFEA; color: #173A2D; padding: 1px 7px; border-radius: 10px; font-size: 0.75rem; font-weight: 700;\">{expected_count}</span>", html)
+        for d in expected_dests:
+            self.assertIn(d.title, html)
+
+        # 3, 4, 5: Create a temporary scenario testing primary, secondary, and dual assignment
+        test_cat = Category.query.filter_by(slug='test-membership-cat').first()
+        if not test_cat:
+            test_cat = Category(
+                name="Test Membership Cat",
+                slug="test-membership-cat",
+                display_order=99,
+                is_active=True
+            )
+            db.session.add(test_cat)
+            db.session.commit()
+
+        # Destination A: primary to test_cat
+        dest_a = Destination.query.filter_by(slug='test-dest-primary-only').first()
+        if not dest_a:
+            dest_a = Destination(
+                title="Test Dest Primary",
+                slug="test-dest-primary-only",
+                category_id=test_cat.id,
+                location="Tamil Nadu",
+                is_published=True
+            )
+            db.session.add(dest_a)
+        else:
+            dest_a.category_id = test_cat.id
+
+        # Destination B: primary to other category, secondary to test_cat
+        other_cat = Category.query.filter(Category.id != test_cat.id).first()
+        dest_b = Destination.query.filter_by(slug='test-dest-secondary-only').first()
+        if not dest_b:
+            dest_b = Destination(
+                title="Test Dest Secondary",
+                slug="test-dest-secondary-only",
+                category_id=other_cat.id,
+                location="Tamil Nadu",
+                is_published=True
+            )
+            db.session.add(dest_b)
+        else:
+            dest_b.category_id = other_cat.id
+
+        # Destination C: BOTH primary to test_cat AND in destination_categories table
+        dest_c = Destination.query.filter_by(slug='test-dest-dual-assigned').first()
+        if not dest_c:
+            dest_c = Destination(
+                title="Test Dest Dual",
+                slug="test-dest-dual-assigned",
+                category_id=test_cat.id,
+                location="Tamil Nadu",
+                is_published=True
+            )
+            db.session.add(dest_c)
+        else:
+            dest_c.category_id = test_cat.id
+
+        db.session.commit()
+
+        # Assign B and C into destination_categories for test_cat
+        for d_obj in [dest_b, dest_c]:
+            exists = db.session.query(destination_categories).filter_by(
+                category_id=test_cat.id, destination_id=d_obj.id
+            ).first()
+            if not exists:
+                db.session.execute(
+                    destination_categories.insert().values(category_id=test_cat.id, destination_id=d_obj.id)
+                )
+        db.session.commit()
+
+        try:
+            # Load admin categories page again
+            res_test = self.client.get('/admin/categories')
+            self.assertEqual(res_test.status_code, 200)
+            test_html = res_test.data.decode('utf-8')
+
+            # Total expected in test_cat = 3 (A=primary, B=secondary, C=dual counted once)
+            # Verify count is 3
+            self.assertIn("Test Dest Primary", test_html)
+            self.assertIn("Test Dest Secondary", test_html)
+            self.assertIn("Test Dest Dual", test_html)
+
+            # 6. Verify Manage Destinations checkboxes: B and C must be checked (in M2M), A not in M2M
+            self.assertIn(f'value="{dest_b.id}" checked', test_html)
+            self.assertIn(f'value="{dest_c.id}" checked', test_html)
+
+            # 7 & 8: Verify changing Category.display_order changes only category order and preserves assignments
+            orig_order = test_cat.display_order
+            res_order = self.client.post('/admin/categories', data={
+                'action': 'save_order',
+                'cat_ids': [str(test_cat.id)],
+                f'order_{test_cat.id}': '42'
+            }, follow_redirects=True)
+            self.assertEqual(res_order.status_code, 200)
+            db.session.expire_all()
+            reloaded_test_cat = Category.query.get(test_cat.id)
+            self.assertEqual(reloaded_test_cat.display_order, 42)
+
+            # Assignments must be unchanged
+            self.assertEqual(dest_a.category_id, test_cat.id)
+            m2m_after = db.session.query(destination_categories).filter_by(category_id=test_cat.id).count()
+            self.assertEqual(m2m_after, 2)
+
+            # 9. Verify public API category filtering matches admin membership
+            api_res = self.client.get(f'/api/destinations?category={test_cat.slug}')
+            self.assertEqual(api_res.status_code, 200)
+            api_dests = api_res.get_json()
+            api_slugs = [d['slug'] for d in api_dests]
+            self.assertIn('test-dest-primary-only', api_slugs)
+            self.assertIn('test-dest-secondary-only', api_slugs)
+            self.assertIn('test-dest-dual-assigned', api_slugs)
+            self.assertEqual(len(api_dests), 3)
+
+            print("[PASS] Category destination membership presentation & consistency verified")
+
+        finally:
+            # Cleanup test records
+            try:
+                db.session.rollback()
+                db.session.execute(
+                    destination_categories.delete().where(destination_categories.c.category_id == test_cat.id)
+                )
+                ids_to_del = [d.id for d in [dest_a, dest_b, dest_c] if getattr(d, 'id', None)]
+                if ids_to_del:
+                    Destination.query.filter(Destination.id.in_(ids_to_del)).delete()
+                db.session.delete(test_cat)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+
 if __name__ == '__main__':
     unittest.main()

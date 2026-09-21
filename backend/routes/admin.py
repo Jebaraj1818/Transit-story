@@ -694,7 +694,7 @@ def categories():
         
     cats = Category.query.order_by(Category.display_order.asc(), Category.name.asc()).all()
 
-    # For each category, collect currently M2M-assigned destination IDs
+    # For each category, collect currently M2M-assigned destination IDs (for assignment checkboxes)
     cat_dest_ids = {}
     for cat in cats:
         try:
@@ -715,10 +715,25 @@ def categories():
         .all()
     )
 
+    # Effective destinations membership per category:
+    # Includes BOTH primary category_id and secondary destination_categories assignments, deduplicated.
+    # Exactly mirrors the public API membership logic.
+    cat_destinations = {}
+    for cat in cats:
+        assigned = []
+        seen_ids = set()
+        m2m_set = cat_dest_ids.get(cat.id, set())
+        for d in all_destinations:
+            if (d.category_id == cat.id or d.id in m2m_set) and (d.id not in seen_ids):
+                seen_ids.add(d.id)
+                assigned.append(d)
+        cat_destinations[cat.id] = assigned
+
     return render_template(
         'categories.html',
         categories=cats,
         cat_dest_ids=cat_dest_ids,
+        cat_destinations=cat_destinations,
         all_destinations=all_destinations
     )
 

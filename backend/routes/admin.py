@@ -11,7 +11,8 @@ from backend.db import db
 from backend.models import (
     Admin, AdminPasswordResetToken, Category, Destination, DestinationGallery,
     DestinationHighlight, DestinationExperience, Service,
-    Enquiry, FAQ, JourneyIdea, SiteSetting, Story, NewsletterSubscriber, EmailLog
+    Enquiry, FAQ, JourneyIdea, SiteSetting, Story, NewsletterSubscriber, EmailLog,
+    destination_categories
 )
 from backend.routes.auth import login_required, super_admin_required, get_current_admin
 from backend.services.email_service import (
@@ -20,6 +21,8 @@ from backend.services.email_service import (
 from backend.services.storage_service import (
     is_blob_configured, validate_media_file, sanitize_pathname,
     upload_file_to_blob, delete_blob, generate_scoped_client_upload_token,
+    is_blob_url, get_media_references, is_media_referenced,
+    safe_cleanup_unused_blob, audit_storage,
     ALLOWED_IMAGE_MIMES, ALLOWED_VIDEO_MIMES, MAX_IMAGE_SIZE, MAX_VIDEO_SIZE
 )
 
@@ -384,6 +387,16 @@ def edit_destination(dest_id):
                 history.append(dest.slug)
             dest.previous_slugs = ','.join(history)
 
+        # Collect old media blobs to check for safe cleanup if replaced
+        old_blobs = set()
+        if is_blob_url(dest.hero_image):
+            old_blobs.add(dest.hero_image)
+        if is_blob_url(dest.cover_image):
+            old_blobs.add(dest.cover_image)
+        for g in dest.gallery:
+            if is_blob_url(g.image_url):
+                old_blobs.add(g.image_url)
+
         dest.title = title
         dest.slug = slug
         dest.category_id = category_id
@@ -423,6 +436,11 @@ def edit_destination(dest_id):
             db.session.add(DestinationGallery(destination_id=dest.id, image_url=img_url, display_order=idx))
             
         db.session.commit()
+
+        # SAFE REPLACEMENT CLEANUP: Clean up any old blobs that are no longer referenced anywhere
+        for old_blob in old_blobs:
+            safe_cleanup_unused_blob(old_blob)
+
         flash(f"Destination '{dest.title}' updated successfully.", "success")
         return redirect(url_for('admin.destinations'))
         
@@ -443,8 +461,23 @@ def toggle_publish_destination(dest_id):
 def delete_destination(dest_id):
     dest = Destination.query.get_or_404(dest_id)
     title = dest.title
+
+    blobs_to_check = set()
+    if is_blob_url(dest.hero_image):
+        blobs_to_check.add(dest.hero_image)
+    if is_blob_url(dest.cover_image):
+        blobs_to_check.add(dest.cover_image)
+    for g in dest.gallery:
+        if is_blob_url(g.image_url):
+            blobs_to_check.add(g.image_url)
+
     db.session.delete(dest)
     db.session.commit()
+
+    # SAFE DELETION CLEANUP: Clean up unreferenced blobs after destination deletion
+    for b in blobs_to_check:
+        safe_cleanup_unused_blob(b)
+
     flash(f"Destination '{title}' deleted.", "info")
     return redirect(url_for('admin.destinations'))
 
@@ -544,27 +577,96 @@ def journey_ideas():
 @login_required
 def categories():
     if request.method == 'POST':
-        name = request.form.get('name', '').strip()
-        slug = request.form.get('slug', '').strip().lower()
-        if not slug:
-            slug = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
-        description = request.form.get('description', '').strip()
-        display_order = int(request.form.get('display_order', 0) or 0)
-        
-        cat = Category(
-            name=name,
-            slug=slug,
-            description=description,
-            display_order=display_order,
-            is_active=True
-        )
-        db.session.add(cat)
-        db.session.commit()
-        flash(f"Category '{name}' created.", "success")
-        return redirect(url_for('admin.categories'))
+        action = request.form.get('action', 'create')
+
+        if action == 'assign_destinations':
+            # Many-to-many assignment: update which destinations appear in a category
+            # via the destination_categories join table without changing category_id FK.
+            cat_id = request.form.get('cat_id')
+            if not cat_id:
+                flash("Invalid category.", "danger")
+                return redirect(url_for('admin.categories'))
+            cat = Category.query.get_or_404(int(cat_id))
+
+            # Destination IDs submitted via checkboxes (may be empty = clear all)
+            selected_ids = set(int(v) for v in request.form.getlist('dest_ids') if v.isdigit())
+
+            # Current M2M assignments for this category
+            current_ids = set(
+                row[0] for row in
+                db.session.query(destination_categories.c.destination_id)
+                .filter(destination_categories.c.category_id == cat.id)
+                .all()
+            )
+
+            # Insert newly added
+            to_add = selected_ids - current_ids
+            for dest_id in to_add:
+                db.session.execute(
+                    destination_categories.insert().values(destination_id=dest_id, category_id=cat.id)
+                )
+
+            # Remove deselected
+            to_remove = current_ids - selected_ids
+            if to_remove:
+                db.session.execute(
+                    destination_categories.delete().where(
+                        (destination_categories.c.category_id == cat.id) &
+                        (destination_categories.c.destination_id.in_(to_remove))
+                    )
+                )
+
+            db.session.commit()
+            flash(f"Destinations updated for category \u2018{cat.name}\u2019.", "success")
+            return redirect(url_for('admin.categories'))
+
+        else:
+            # Default: create new category
+            name = request.form.get('name', '').strip()
+            slug = request.form.get('slug', '').strip().lower()
+            if not slug:
+                slug = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
+            description = request.form.get('description', '').strip()
+            display_order = int(request.form.get('display_order', 0) or 0)
+            
+            cat = Category(
+                name=name,
+                slug=slug,
+                description=description,
+                display_order=display_order,
+                is_active=True
+            )
+            db.session.add(cat)
+            db.session.commit()
+            flash(f"Category '{name}' created.", "success")
+            return redirect(url_for('admin.categories'))
         
     cats = Category.query.order_by(Category.display_order.asc(), Category.name.asc()).all()
-    return render_template('categories.html', categories=cats)
+
+    # For each category, collect currently M2M-assigned destination IDs
+    cat_dest_ids = {}
+    for cat in cats:
+        cat_dest_ids[cat.id] = set(
+            row[0] for row in
+            db.session.query(destination_categories.c.destination_id)
+            .filter(destination_categories.c.category_id == cat.id)
+            .all()
+        )
+
+    # All destinations (published or not) for the assignment checkboxes
+    all_destinations = (
+        Destination.query
+        .options(joinedload(Destination.category))
+        .order_by(Destination.title.asc())
+        .all()
+    )
+
+    return render_template(
+        'categories.html',
+        categories=cats,
+        cat_dest_ids=cat_dest_ids,
+        all_destinations=all_destinations
+    )
 
 @admin_bp.route('/categories/<int:cat_id>/delete', methods=['POST'])
 @login_required
@@ -618,8 +720,11 @@ def services():
 @login_required
 def delete_service(svc_id):
     svc = Service.query.get_or_404(svc_id)
+    img = svc.image
     db.session.delete(svc)
     db.session.commit()
+    if img and is_blob_url(img):
+        safe_cleanup_unused_blob(img)
     flash(f"Service '{svc.title}' deleted.", "info")
     return redirect(url_for('admin.services'))
 
@@ -704,8 +809,11 @@ def stories():
 @login_required
 def delete_story(story_id):
     story = Story.query.get_or_404(story_id)
+    img = story.image
     db.session.delete(story)
     db.session.commit()
+    if img and is_blob_url(img):
+        safe_cleanup_unused_blob(img)
     flash(f"Story '{story.title}' deleted.", "info")
     return redirect(url_for('admin.stories'))
 
@@ -732,24 +840,67 @@ def delete_subscriber(sub_id):
 # SITE SETTINGS & NOTIFICATION CONFIGURATION
 # ------------------------------------------------------------------------------
 
+DEFAULT_MEDIA_SETTINGS = {
+    'homepage_hero_photo_1': '/images/hero/hero01.jpg',
+    'homepage_hero_photo_2': '/images/hero/hero-video-poster.jpg',
+    'homepage_hero_photo_3': '/images/hero/hero-02.jpg',
+    'homepage_hero_video': '/images/hero/hero-vedio-final.mp4',
+    'college_iv_slide_1': '/images/kerala-arts-crafts-village-04.jpg',
+    'college_iv_slide_2': '/images/kerala-arts-crafts-village-01-alt.jpg',
+    'college_iv_slide_3': '/images/koodankulam-nuclear-plant-01.jpg',
+}
+
 @admin_bp.route('/site-settings', methods=['GET', 'POST'])
 @login_required
 def site_settings():
     if request.method == 'POST':
-        # Check permissions: only Super Admin can edit critical settings/notification emails
-        for key, val in request.form.items():
-            cleaned_val = (val or '').strip()
-            setting = SiteSetting.query.filter_by(setting_key=key).first()
-            if setting:
-                # Never overwrite an existing setting with an empty/whitespace-only value
-                if cleaned_val:
-                    setting.setting_value = cleaned_val
-            elif cleaned_val:
-                # New settings should only be created when the submitted value is non-empty
-                db.session.add(SiteSetting(setting_key=key, setting_value=cleaned_val))
-        db.session.commit()
-        flash("Site settings updated successfully.", "success")
-        return redirect(url_for('admin.site_settings'))
+        old_blobs_to_check = set()
+        new_blobs_submitted = set()
+
+        try:
+            for key, val in request.form.items():
+                cleaned_val = (val or '').strip()
+                # If a known media setting is submitted empty, apply its default local fallback
+                if not cleaned_val and key in DEFAULT_MEDIA_SETTINGS:
+                    cleaned_val = DEFAULT_MEDIA_SETTINGS[key]
+
+                setting = SiteSetting.query.filter_by(setting_key=key).first()
+                if setting:
+                    old_val = (setting.setting_value or '').strip()
+                    if cleaned_val:
+                        if cleaned_val != old_val:
+                            setting.setting_value = cleaned_val
+                            if is_blob_url(old_val):
+                                old_blobs_to_check.add(old_val)
+                            if is_blob_url(cleaned_val):
+                                new_blobs_submitted.add(cleaned_val)
+                elif cleaned_val:
+                    db.session.add(SiteSetting(setting_key=key, setting_value=cleaned_val))
+                    if is_blob_url(cleaned_val):
+                        new_blobs_submitted.add(cleaned_val)
+
+            db.session.commit()
+
+            # SAFE REPLACEMENT CLEANUP (Requirement 1, 3, 4)
+            # Only executes strictly AFTER the database commit succeeds.
+            # Only deletes old blobs that are no longer referenced anywhere in DB.
+            for old_blob in old_blobs_to_check:
+                safe_cleanup_unused_blob(old_blob)
+
+            flash("Site settings updated successfully.", "success")
+            return redirect(url_for('admin.site_settings'))
+
+        except Exception as exc:
+            db.session.rollback()
+            # UPLOAD FAILURE SAFETY (Requirement 5):
+            # Rollback preserves existing settings. Clean up uncommitted newly uploaded blobs.
+            for new_blob in new_blobs_submitted:
+                try:
+                    safe_cleanup_unused_blob(new_blob)
+                except Exception as clean_err:
+                    pass
+            flash("Failed to save site settings. Database changes were rolled back.", "danger")
+            return redirect(url_for('admin.site_settings'))
         
     settings = SiteSetting.query.all()
     settings_dict = {s.setting_key: s.setting_value for s in settings}
@@ -871,15 +1022,37 @@ def media_delete():
     Safety guarantees:
     - Requires authenticated admin session.
     - Prohibits deleting local /images/... assets.
+    - Blocks deleting media that is actively referenced in the database (unless force=True).
     - Only deletes URLs confirmed to belong to Vercel Blob storage.
     """
     data = request.get_json(silent=True) or request.form
     url = (data.get('url') or '').strip()
+    force = (data.get('force') or '0') in ['1', 'true', 'True', True]
     if not url:
         return jsonify({'success': False, 'message': 'URL is required.'}), 400
 
+    # Rule: Never delete an asset that is currently referenced by content
+    if not force:
+        refs = get_media_references(url)
+        if refs:
+            return jsonify({
+                'success': False,
+                'message': f"Cannot delete media asset: It is actively referenced in {len(refs)} location(s) ({', '.join(refs)})."
+            }), 409
+
     success, msg = delete_blob(url)
     return jsonify({'success': success, 'message': msg}), (200 if success else 400)
+
+
+@admin_bp.route('/api/media/audit', methods=['GET'])
+@login_required
+def media_audit():
+    """
+    Returns an audit report of all media assets in the database, local disk,
+    and Vercel Blob storage.
+    """
+    report = audit_storage()
+    return jsonify({'success': True, 'audit': report}), 200
 
 # ------------------------------------------------------------------------------
 # ADMIN ACCOUNTS MANAGEMENT (SUPER_ADMIN ONLY)

@@ -592,7 +592,6 @@ export default function Home() {
                 if (el) el.scrollIntoView({ behavior: 'smooth' });
               }}
             >
-              <span className="font-serif text-sm font-semibold text-gold">01</span>
               <span className="w-5 sm:w-6 h-px bg-gold/60 hidden sm:inline-block" aria-hidden="true" />
               <span className="text-[10px] sm:text-[10.5px] uppercase tracking-editorial sm:tracking-expansive text-ivory/90 font-medium whitespace-nowrap">
                 Scroll to Explore
@@ -1212,10 +1211,6 @@ export default function Home() {
                 className="flex flex-col"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] sm:text-[11px] font-serif text-[#C49A45] tracking-widest uppercase">
-                    {collegeIvSlides[currentIvSlide].num} / {collegeIvSlides[currentIvSlide].total}
-                  </span>
-                  <span className="text-[10px] text-[#C49A45]/50" aria-hidden="true">&middot;</span>
                   <span className="text-[9.5px] sm:text-[10.5px] text-[#F5F0E5]/75 tracking-wider uppercase font-medium">
                     {collegeIvSlides[currentIvSlide].location}
                   </span>

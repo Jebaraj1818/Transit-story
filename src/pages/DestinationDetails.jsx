@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -29,22 +29,72 @@ export default function DestinationDetails() {
     window.scrollTo(0, 0);
   }, [slug]);
 
-  // Initial state from synchronous local lookup, then updated asynchronously from Flask API
+  // ── State initialization ────────────────────────────────────────────────────
+  // Lazy initializers run once on mount (the slug captured in the closure is
+  // the initial slug). For slug *changes* the useLayoutEffect below resets
+  // state synchronously before the browser paints, eliminating any flash.
   const [destination, setDestination] = useState(
-    () => getLocalDestinationBySlug(slug) || getJourneyBySlug(slug)
+    () => getLocalDestinationBySlug(slug) || getJourneyBySlug(slug) || null
   );
+  const [loading, setLoading] = useState(() => {
+    const local = getLocalDestinationBySlug(slug) || getJourneyBySlug(slug);
+    return !local; // start loading only when there is no immediate local data
+  });
+  const [notFound, setNotFound] = useState(false);
+  const [apiError, setApiError] = useState(false);
 
+  // Track the slug for which the current state is valid so we can detect staleness.
+  const stateSlugRef = useRef(slug);
+
+  // ── Synchronous state reset on slug change ──────────────────────────────────
+  // useLayoutEffect runs synchronously after DOM mutations but before the
+  // browser paints. This ensures that when the slug changes we immediately
+  // show the correct loading/local state instead of briefly showing stale
+  // state (e.g. notFound or a previous destination) before the effect runs.
+  useLayoutEffect(() => {
+    if (stateSlugRef.current === slug) return; // same slug — nothing to reset
+    stateSlugRef.current = slug;
+
+    const freshLocal = getLocalDestinationBySlug(slug) || getJourneyBySlug(slug) || null;
+    setDestination(freshLocal);
+    setLoading(!freshLocal); // show skeleton only when there is no local data
+    setNotFound(false);
+    setApiError(false);
+  }, [slug]);
+
+  // ── Async API fetch ─────────────────────────────────────────────────────────
   useEffect(() => {
     let isMounted = true;
-    getDestinationBySlug(slug).then((data) => {
-      if (isMounted && data && data.title) {
-        setDestination(data);
-        // If URL used an old slug or alias, replace URL with canonical slug seamlessly
-        if (data.slug && data.slug.toLowerCase() !== slug.toLowerCase() && location.pathname.startsWith('/tours/')) {
-          navigate(`/tours/${data.slug}`, { replace: true });
+    const freshLocal = getLocalDestinationBySlug(slug) || getJourneyBySlug(slug) || null;
+
+    getDestinationBySlug(slug)
+      .then((data) => {
+        if (!isMounted) return;
+        if (data && data.title) {
+          setDestination(data);
+          setNotFound(false);
+          // If URL used an old slug or alias, replace URL with canonical slug seamlessly
+          if (
+            data.slug &&
+            data.slug.toLowerCase() !== slug.toLowerCase() &&
+            location.pathname.startsWith('/tours/')
+          ) {
+            navigate(`/tours/${data.slug}`, { replace: true });
+          }
+        } else {
+          // API responded but returned no usable destination
+          if (!freshLocal) setNotFound(true);
         }
-      }
-    });
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        // API failed — only show error when there is no local fallback to display
+        if (!freshLocal) setApiError(true);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
     return () => {
       isMounted = false;
     };
@@ -181,7 +231,49 @@ export default function DestinationDetails() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activePhotoIndex, galleryImages.length]);
 
-  if (!destination) {
+  // ── Loading skeleton ──────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center py-20 px-4 bg-[#F5F0E5]">
+        <div className="max-w-md w-full text-center">
+          {/* Animated compass icon */}
+          <Compass
+            className="w-10 h-10 text-earth mx-auto mb-6"
+            style={{ animation: 'spin 1.8s linear infinite' }}
+          />
+          <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+          {/* Skeleton lines */}
+          <div className="space-y-3 animate-pulse">
+            <div className="h-5 bg-[#E0D8BD] rounded-sm w-2/3 mx-auto" />
+            <div className="h-3 bg-[#E0D8BD] rounded-sm w-1/2 mx-auto" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── API error state (separate from not-found) ─────────────────────────────
+  if (apiError) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center py-20 px-4 bg-[#F5F0E5]">
+        <div className="max-w-md w-full text-center bg-[#FCFAF5] border border-[#E0D8BD] p-8 sm:p-10 rounded-sm shadow-sm">
+          <Compass className="w-10 h-10 text-earth mx-auto mb-4" />
+          <h2 className="font-serif text-3xl font-normal text-forest mb-3">
+            Something Went Wrong
+          </h2>
+          <p className="text-sm text-charcoal-muted mb-8 leading-relaxed">
+            We could not load this destination right now. Please try again later.
+          </p>
+          <Button to="/tours" variant="primary">
+            Explore All Tours
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Genuine 404 — API completed but returned nothing ─────────────────────
+  if (notFound || !destination) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center py-20 px-4 bg-[#F5F0E5]">
         <div className="max-w-md w-full text-center bg-[#FCFAF5] border border-[#E0D8BD] p-8 sm:p-10 rounded-sm shadow-sm">

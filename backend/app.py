@@ -83,6 +83,22 @@ def create_app(config_class=Config):
         with app.app_context():
             try:
                 db.create_all()
+                # Ensure the many-to-many destination_categories join table exists
+                from sqlalchemy import text as _text
+                try:
+                    db.session.execute(_text(
+                        "CREATE TABLE IF NOT EXISTS destination_categories ("
+                        "  destination_id INT NOT NULL,"
+                        "  category_id INT NOT NULL,"
+                        "  PRIMARY KEY (destination_id, category_id),"
+                        "  CONSTRAINT fk_dc_dest FOREIGN KEY (destination_id) REFERENCES destinations(id) ON DELETE CASCADE,"
+                        "  CONSTRAINT fk_dc_cat  FOREIGN KEY (category_id)  REFERENCES categories(id)  ON DELETE CASCADE"
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+                    ))
+                    db.session.commit()
+                except Exception as dc_err:
+                    db.session.rollback()
+                    print(f"[DB Migration Notice] destination_categories table: {dc_err}")
                 # Verify and migrate any new columns on existing tables
                 from sqlalchemy import text
                 try:

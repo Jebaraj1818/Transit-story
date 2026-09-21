@@ -419,8 +419,17 @@ export function matchesTourCategory(tour, categoryId) {
 
   if (!cleanId || cleanId === 'all') return true;
 
-  // 4. Match against tour.mainCategory slug
+  // 4. Match against tour.mainCategory slug or secondary categories array
   if (tour.mainCategory && String(tour.mainCategory).toLowerCase().trim() === cleanId) {
+    return true;
+  }
+  if (Array.isArray(tour.categories) && tour.categories.some((c) => String(c).toLowerCase().trim() === cleanId)) {
+    return true;
+  }
+  if (Array.isArray(tour.categorySlugs) && tour.categorySlugs.some((c) => String(c).toLowerCase().trim() === cleanId)) {
+    return true;
+  }
+  if (Array.isArray(tour.secondaryCategories) && tour.secondaryCategories.some((c) => String(c).toLowerCase().trim() === cleanId)) {
     return true;
   }
 

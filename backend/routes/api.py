@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, request
 from backend.db import db
 from backend.models import (
     Category, Destination, Service, FAQ, JourneyIdea,
-    SiteSetting, Story, Enquiry, NewsletterSubscriber
+    SiteSetting, Story, Enquiry, NewsletterSubscriber, destination_categories
 )
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -45,25 +45,43 @@ def get_categories():
 def get_destinations():
     category_slug = request.args.get('category', '').strip().lower()
     
-    query = Destination.query.options(
+    base_query = Destination.query.options(
         joinedload(Destination.category)
     ).filter_by(is_published=True)
     
     if category_slug and category_slug != 'all':
         category = Category.query.filter_by(slug=category_slug).first()
         if category:
-            query = query.filter_by(category_id=category.id)
+            # Match destinations that belong to this category via either:
+            # (a) the primary category_id FK, or
+            # (b) the many-to-many destination_categories join table
+            m2m_dest_ids = (
+                db.session.query(destination_categories.c.destination_id)
+                .filter(destination_categories.c.category_id == category.id)
+                .subquery()
+            )
+            base_query = base_query.filter(
+                (Destination.category_id == category.id) |
+                (Destination.id.in_(m2m_dest_ids))
+            )
         elif category_slug == 'college-educational':
-            query = query.filter_by(is_educational=True)
+            base_query = base_query.filter_by(is_educational=True)
         else:
             # Fallback for matching title/slug tags
-            query = query.filter(
+            base_query = base_query.filter(
                 (Destination.tag.ilike(f"%{category_slug}%")) |
                 (Destination.location.ilike(f"%{category_slug}%"))
             )
             
-    destinations = query.order_by(Destination.display_order.asc(), Destination.id.asc()).all()
-    resp = jsonify([d.to_summary_dict() for d in destinations])
+    destinations = base_query.order_by(Destination.display_order.asc(), Destination.id.asc()).all()
+    # Deduplicate in case a destination matched both FK and M2M (shouldn't happen but safety net)
+    seen = set()
+    unique = []
+    for d in destinations:
+        if d.id not in seen:
+            seen.add(d.id)
+            unique.append(d)
+    resp = jsonify([d.to_summary_dict() for d in unique])
     resp.headers['Cache-Control'] = PUBLIC_CACHE_CONTROL
     return resp
 

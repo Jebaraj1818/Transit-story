@@ -2,15 +2,18 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import { MapPin, ArrowRight, Compass, Sparkles, AlertCircle } from 'lucide-react';
 import { matchesTourCategory, TOUR_CATEGORY_FILTERS } from '../data/destinations';
-import { getDestinations, getCategories } from '../api/client';
+import { getDestinations, getCategories, getCachedDestinations } from '../api/client';
 
 export default function Tours() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentCategory = searchParams.get('category') || 'all';
 
-  // Authoritative destinations state with proper loading/error cycle
-  const [allTours, setAllTours] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Authoritative destinations state with proper loading/error cycle.
+  // Seed initial state from the synchronous in-memory cache when available
+  // (warm on Back navigation) so the skeleton is never shown unnecessarily.
+  const cachedOnMount = getCachedDestinations();
+  const [allTours, setAllTours] = useState(() => getCachedDestinations() || []);
+  const [loading, setLoading] = useState(!cachedOnMount);
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState(TOUR_CATEGORY_FILTERS);
 

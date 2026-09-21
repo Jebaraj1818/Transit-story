@@ -184,6 +184,19 @@ window.AdminUploader = (function () {
 
     try {
       const result = await uploadImage(file, folder);
+      // If a previous upload was performed in this session and replaced before saving,
+      // request safe cleanup of the discarded unsaved asset
+      if (inputElem._lastSessionUploadedUrl && inputElem._lastSessionUploadedUrl !== result.url) {
+        try {
+          fetch('/admin/api/media/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: inputElem._lastSessionUploadedUrl })
+          }).catch(() => {});
+        } catch (e) {}
+      }
+      inputElem._lastSessionUploadedUrl = result.url;
+
       if (targetInput) targetInput.value = result.url;
       if (previewImg) previewImg.src = result.url;
       if (previewContainer) previewContainer.style.display = 'block';
@@ -247,6 +260,19 @@ window.AdminUploader = (function () {
           progressText.textContent = `Uploading direct to Vercel Blob: ${pct}% (${(loaded / 1024 / 1024).toFixed(1)}MB / ${(total / 1024 / 1024).toFixed(1)}MB)`;
         }
       });
+
+      // If a previous upload was performed in this session and replaced before saving,
+      // request safe cleanup of the discarded unsaved asset
+      if (inputElem._lastSessionUploadedUrl && inputElem._lastSessionUploadedUrl !== result.url) {
+        try {
+          fetch('/admin/api/media/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: inputElem._lastSessionUploadedUrl })
+          }).catch(() => {});
+        } catch (e) {}
+      }
+      inputElem._lastSessionUploadedUrl = result.url;
 
       if (targetInput) targetInput.value = result.url;
       if (previewVideo) {

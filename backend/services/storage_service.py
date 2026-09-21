@@ -240,6 +240,294 @@ def delete_blob(blob_url):
         return False, "Failed to connect to storage service for deletion."
 
 
+def is_blob_url(url):
+    """
+    Returns True only if url is a valid Vercel Blob storage URL.
+    Explicitly rejects local static assets, relative paths, or non-blob URLs.
+    """
+    if not url or not isinstance(url, str):
+        return False
+    clean = url.strip()
+    if clean.startswith(('/images/', 'images/', '/static/', 'static/')):
+        return False
+    if not (clean.startswith('http://') or clean.startswith('https://')):
+        return False
+    return 'blob.vercel-storage.com' in clean
+
+
+def get_media_references(url):
+    """
+    Finds all active references to a media URL across the entire database.
+    Checks:
+    - SiteSetting (setting_value)
+    - Destination (cover_image, hero_image, description, about)
+    - DestinationGallery (image_url)
+    - Service (image)
+    - Story (image, content)
+    Returns a list of descriptive reference strings, e.g.:
+    ['SiteSetting.homepage_hero_photo_2', 'Destination(podaran-foods:hero_image)']
+    """
+    if not url or not isinstance(url, str):
+        return []
+
+    clean_url = url.strip()
+    if not clean_url:
+        return []
+
+    try:
+        from backend.models import SiteSetting, Destination, DestinationGallery, Service, Story
+        from sqlalchemy import or_
+    except Exception as imp_err:
+        logger.error(f"[Storage Service] Error importing models for reference check: {imp_err}")
+        return []
+
+    references = []
+
+    try:
+        # 1. SiteSetting
+        settings = SiteSetting.query.filter(SiteSetting.setting_value == clean_url).all()
+        for s in settings:
+            references.append(f"SiteSetting.{s.setting_key}")
+
+        # 2. Destination (direct cover & hero image fields)
+        destinations = Destination.query.filter(
+            or_(Destination.hero_image == clean_url, Destination.cover_image == clean_url)
+        ).all()
+        for d in destinations:
+            if d.hero_image == clean_url:
+                references.append(f"Destination({d.slug}:hero_image)")
+            if d.cover_image == clean_url and d.cover_image != d.hero_image:
+                references.append(f"Destination({d.slug}:cover_image)")
+
+        # 3. DestinationGallery
+        galleries = DestinationGallery.query.filter(DestinationGallery.image_url == clean_url).all()
+        for g in galleries:
+            dest_slug = g.destination.slug if g.destination else f"id_{g.destination_id}"
+            references.append(f"DestinationGallery({dest_slug}:slot_{g.display_order})")
+
+        # 4. Service
+        services = Service.query.filter(Service.image == clean_url).all()
+        for svc in services:
+            references.append(f"Service({svc.slug})")
+
+        # 5. Story
+        stories = Story.query.filter(Story.image == clean_url).all()
+        for st in stories:
+            references.append(f"Story({st.slug})")
+
+        # 6. Embedded media in rich text / descriptions
+        content_dests = Destination.query.filter(
+            or_(
+                Destination.description.contains(clean_url),
+                Destination.about.contains(clean_url)
+            )
+        ).all()
+        for cd in content_dests:
+            ref_name = f"Destination({cd.slug}:content)"
+            if ref_name not in references:
+                references.append(ref_name)
+
+        content_stories = Story.query.filter(Story.content.contains(clean_url)).all()
+        for cs in content_stories:
+            ref_name = f"Story({cs.slug}:content)"
+            if ref_name not in references:
+                references.append(ref_name)
+
+    except Exception as db_err:
+        logger.error(f"[Storage Service] Error querying database references for '{clean_url}': {db_err}")
+        # On error, play it completely safe: treat as referenced so we never delete blindly
+        return [f"DatabaseCheckError({db_err})"]
+
+    return references
+
+
+def is_media_referenced(url):
+    """Returns True if the media URL is currently referenced anywhere in the database."""
+    return len(get_media_references(url)) > 0
+
+
+def safe_cleanup_unused_blob(blob_url):
+    """
+    Safely deletes a Blob asset from Vercel Blob storage ONLY IF:
+    1. It is a valid Vercel Blob URL (never a local asset like /images/...).
+    2. It is not referenced anywhere in the database (SiteSetting, Destination, Gallery, Service, Story, content).
+    3. Storage service is properly configured.
+
+    Returns (success: bool, message: str).
+    Guarantees:
+    - Never deletes shared media.
+    - Never deletes local static default assets.
+    - Safe, idempotent, and non-blocking on errors.
+    """
+    if not blob_url or not isinstance(blob_url, str):
+        return False, "Invalid blob URL."
+
+    clean_url = blob_url.strip()
+
+    # Rule 1: Reject local committed assets immediately
+    if clean_url.startswith(('/images/', 'images/', '/static/', 'static/')):
+        return False, "Cannot delete local static media assets."
+
+    # Rule 2: Verify it is a Vercel Blob URL
+    if not is_blob_url(clean_url):
+        return False, f"URL does not belong to project's Vercel Blob storage: {clean_url}"
+
+    # Rule 3: Search for any references in the database
+    refs = get_media_references(clean_url)
+    if refs:
+        logger.info(f"[Vercel Blob Safety] Kept shared blob {clean_url}; referenced in: {', '.join(refs)}")
+        return False, f"Blob asset is still referenced in {len(refs)} location(s) ({', '.join(refs)}); deletion skipped."
+
+    # Rule 4: No references exist anywhere, safe to delete via delete_blob
+    logger.info(f"[Vercel Blob Cleanup] Asset is completely unreferenced. Proceeding with deletion: {clean_url}")
+    return delete_blob(clean_url)
+
+
+def list_blobs(limit=1000, prefix=None):
+    """
+    Lists blobs from Vercel Blob storage using the official REST API.
+    Returns (True, [blob_dicts]) or (False, error_message).
+    """
+    token = Config.TRANSIT_BLOB_READ_WRITE_TOKEN
+    if not token:
+        return False, "Vercel Blob storage is not configured."
+
+    url = VERCEL_BLOB_API_BASE
+    headers = {"Authorization": f"Bearer {token}"}
+    params = {}
+    if limit:
+        params['limit'] = limit
+    if prefix:
+        params['prefix'] = prefix
+
+    try:
+        response = requests.get(url, headers=headers, params=params, timeout=15.0)
+        if response.status_code == 200:
+            data = response.json()
+            return True, data.get('blobs', [])
+        else:
+            safe_resp = (response.text or "").replace(token, "[REDACTED]")
+            return False, f"Failed to list blobs (HTTP {response.status_code}): {safe_resp[:200]}"
+    except Exception as exc:
+        safe_err = str(exc).replace(token, "[REDACTED]")
+        return False, f"Exception listing blobs: {safe_err[:200]}"
+
+
+def audit_storage(project_root=None):
+    """
+    Performs a non-destructive storage audit:
+    - Analyzes active database media references.
+    - Inspects public/images directory for referenced vs unreferenced local files.
+    - Queries Vercel Blob (if configured) to detect referenced vs orphaned blobs.
+    - Never deletes any files.
+    """
+    from datetime import datetime
+    from backend.models import SiteSetting, Destination, DestinationGallery, Service, Story
+
+    if not project_root:
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+    # 1. Collect all DB media references
+    db_media = {
+        'site_settings': [],
+        'destinations': [],
+        'galleries': [],
+        'services': [],
+        'stories': []
+    }
+    all_referenced_urls = set()
+
+    for s in SiteSetting.query.all():
+        val = (s.setting_value or '').strip()
+        if val and any(k in s.setting_key.lower() for k in ['hero', 'photo', 'video', 'slide', 'image', 'banner', 'poster']):
+            db_media['site_settings'].append({'key': s.setting_key, 'url': val, 'is_blob': is_blob_url(val)})
+            all_referenced_urls.add(val)
+
+    for d in Destination.query.all():
+        if d.hero_image:
+            u = d.hero_image.strip()
+            db_media['destinations'].append({'slug': d.slug, 'field': 'hero_image', 'url': u, 'is_blob': is_blob_url(u)})
+            all_referenced_urls.add(u)
+        if d.cover_image and d.cover_image != d.hero_image:
+            u = d.cover_image.strip()
+            db_media['destinations'].append({'slug': d.slug, 'field': 'cover_image', 'url': u, 'is_blob': is_blob_url(u)})
+            all_referenced_urls.add(u)
+
+    for g in DestinationGallery.query.all():
+        if g.image_url:
+            u = g.image_url.strip()
+            dest_slug = g.destination.slug if g.destination else f"id_{g.destination_id}"
+            db_media['galleries'].append({'destination': dest_slug, 'slot': g.display_order, 'url': u, 'is_blob': is_blob_url(u)})
+            all_referenced_urls.add(u)
+
+    for s in Service.query.all():
+        if s.image:
+            u = s.image.strip()
+            db_media['services'].append({'slug': s.slug, 'url': u, 'is_blob': is_blob_url(u)})
+            all_referenced_urls.add(u)
+
+    for st in Story.query.all():
+        if st.image:
+            u = st.image.strip()
+            db_media['stories'].append({'slug': st.slug, 'url': u, 'is_blob': is_blob_url(u)})
+            all_referenced_urls.add(u)
+
+    # 2. Audit local public/images files
+    public_images_dir = os.path.join(project_root, 'public', 'images')
+    local_files = []
+    if os.path.exists(public_images_dir):
+        for root, dirs, files in os.walk(public_images_dir):
+            for fname in files:
+                if fname.endswith(('.gitkeep', '.DS_Store')):
+                    continue
+                fpath = os.path.join(root, fname)
+                rel_path = os.path.relpath(fpath, os.path.join(project_root, 'public')).replace('\\', '/')
+                rel_url = '/' + rel_path.lstrip('/')
+                size = os.path.getsize(fpath)
+                is_referenced = (rel_url in all_referenced_urls) or any(rel_url in u for u in all_referenced_urls)
+                local_files.append({
+                    'path': rel_url,
+                    'size_bytes': size,
+                    'size_kb': round(size / 1024, 1),
+                    'referenced_in_db': is_referenced
+                })
+
+    # 3. Audit Vercel Blob store
+    blob_audit = {
+        'configured': is_blob_configured(),
+        'total_blobs': 0,
+        'active_blobs': [],
+        'unreferenced_blobs': []
+    }
+    if is_blob_configured():
+        ok, blobs_or_err = list_blobs(limit=1000)
+        if ok and isinstance(blobs_or_err, list):
+            blob_audit['total_blobs'] = len(blobs_or_err)
+            for b in blobs_or_err:
+                b_url = b.get('url', '')
+                refs = get_media_references(b_url)
+                info = {
+                    'url': b_url,
+                    'pathname': b.get('pathname', ''),
+                    'size_bytes': b.get('size', 0),
+                    'uploaded_at': b.get('uploadedAt', ''),
+                    'references': refs
+                }
+                if refs:
+                    blob_audit['active_blobs'].append(info)
+                else:
+                    blob_audit['unreferenced_blobs'].append(info)
+
+    return {
+        'timestamp': datetime.utcnow().isoformat(),
+        'db_media': db_media,
+        'total_db_references': sum(len(v) for v in db_media.values()),
+        'local_files_count': len(local_files),
+        'local_files': local_files,
+        'blob_audit': blob_audit
+    }
+
+
 def generate_scoped_client_upload_token(folder, filename, content_type, size_bytes=0):
     """
     Generates an official scoped Vercel Blob client token for large video uploads (up to 100MB).

@@ -85,7 +85,7 @@ export default function About() {
               {/* Narrative Paragraph with Comfortable Reading Width */}
               <div className="max-w-2xl text-sm sm:text-base md:text-[17px] text-charcoal leading-relaxed font-normal">
                 <p>
-                  Based in Tamil Nadu, our work connects mindful travelers with knowledge-holders, temple historians, handloom masters, and rural stewards who maintain centuries of living heritage. We view transit not as passive transit time, but as an intellectual voyage and an act of conscious patronage.
+                  Based in Tamil Nadu, our work connects mindful travelers with knowledge-holders, cultural historians, handloom masters, and rural stewards who maintain centuries of living heritage. We view transit not as passive transit time, but as an intellectual voyage and an act of conscious patronage.
                 </p>
               </div>
 
@@ -196,7 +196,7 @@ export default function About() {
                 &ldquo;You choose the journey. We arrange the rest.&rdquo;
               </h3>
               <p className="text-xs sm:text-sm text-charcoal-muted leading-relaxed max-w-xl font-normal">
-                While cultural depth defines our ethos, Transit Story is a comprehensive travel arrangements service. We coordinate private transportation fleets, hotel and accommodation arrangements, tour planning, college and educational travel, group journeys, and tailored logistics across South India with seamless attention to comfort.
+                While cultural depth defines our ethos, Transit Story is a comprehensive travel arrangements and tour operating company. We coordinate private transportation fleets, hotel and accommodation arrangements, tour planning, college and educational travel, group journeys, and tailored logistics across India with seamless attention to comfort.
               </p>
             </div>
 
@@ -234,6 +234,20 @@ export default function About() {
             </div>
           </div>
         </section>
+
+        {/* ========================================================================= */}
+        {/* 5b. VISION SECTION                                                        */}
+        {/* ========================================================================= */}
+        <motion.section {...fadeIn} className="pt-8 sm:pt-10 border-t border-[#E3DCBF] mb-12 sm:mb-16">
+          <div className="max-w-3xl">
+            <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] text-earth font-medium block mb-3">
+              VISION
+            </span>
+            <blockquote className="font-serif text-xl sm:text-2xl md:text-[1.65rem] text-forest font-normal italic leading-snug tracking-tight text-balance">
+              &ldquo;To make every journey meaningful for travellers, communities and destinations&rdquo;
+            </blockquote>
+          </div>
+        </motion.section>
 
         {/* ========================================================================= */}
         {/* 6. FINAL EDITORIAL CTA                                                    */}

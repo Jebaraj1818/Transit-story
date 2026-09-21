@@ -59,6 +59,16 @@ class AdminPasswordResetToken(db.Model):
     def is_valid(self):
         return self.used_at is None and self.expires_at > datetime.utcnow()
 
+
+# ---------------------------------------------------------------------------
+# Many-to-Many association table: a destination can belong to multiple categories
+# ---------------------------------------------------------------------------
+destination_categories = db.Table(
+    'destination_categories',
+    db.Column('destination_id', db.Integer, db.ForeignKey('destinations.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('category_id', db.Integer, db.ForeignKey('categories.id', ondelete='CASCADE'), primary_key=True)
+)
+
 class Category(db.Model):
     __tablename__ = 'categories'
     
@@ -71,7 +81,10 @@ class Category(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    destinations = db.relationship('Destination', back_populates='category', lazy='dynamic', cascade='all, delete-orphan')
+    # One-to-many (primary category relationship — backward-compatible)
+    destinations = db.relationship('Destination', back_populates='category', lazy='dynamic', foreign_keys='Destination.category_id')
+    # Many-to-many (secondary/multi-category assignments)
+    destinations_m2m = db.relationship('Destination', secondary=destination_categories, back_populates='secondary_categories', lazy='dynamic')
     
     def to_dict(self):
         return {
@@ -105,7 +118,9 @@ class Destination(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    category = db.relationship('Category', back_populates='destinations')
+    category = db.relationship('Category', back_populates='destinations', foreign_keys=[category_id])
+    # Many-to-many secondary categories (does not affect category_id / primary category)
+    secondary_categories = db.relationship('Category', secondary=destination_categories, back_populates='destinations_m2m', lazy='select')
     gallery = db.relationship('DestinationGallery', back_populates='destination', cascade='all, delete-orphan', order_by='DestinationGallery.display_order')
     highlights = db.relationship('DestinationHighlight', back_populates='destination', cascade='all, delete-orphan', order_by='DestinationHighlight.display_order')
     experiences = db.relationship('DestinationExperience', back_populates='destination', cascade='all, delete-orphan', order_by='DestinationExperience.display_order')
@@ -129,6 +144,12 @@ class Destination(db.Model):
         # Combined images array for fallback compatibility
         images_list = [hero_img] + [g for g in gallery_list if g != hero_img] if hero_img else gallery_list
         
+        try:
+            sec_slugs = [c.slug for c in self.secondary_categories] if self.secondary_categories else []
+        except Exception:
+            sec_slugs = []
+        all_cat_slugs = [cat_slug] + [s for s in sec_slugs if s != cat_slug]
+
         res = {
             'id': self.id,
             'slug': self.slug,
@@ -137,6 +158,9 @@ class Destination(db.Model):
             'mainCategory': cat_slug,
             'categoryName': cat_name,
             'category': cat_name,
+            'categories': all_cat_slugs,
+            'categorySlugs': all_cat_slugs,
+            'secondaryCategories': sec_slugs,
             'location': self.location,
             'tag': self.tag,
             'coverImage': self.cover_image or hero_img,
@@ -165,6 +189,11 @@ class Destination(db.Model):
         cat_slug = self.category.slug if self.category else ('college-educational' if self.is_educational else 'leisure-holiday')
         cat_name = self.category.name if self.category else ('College & Educational' if self.is_educational else 'Leisure & Holiday')
         hero_img = self.hero_image or self.cover_image
+        try:
+            sec_slugs = [c.slug for c in self.secondary_categories] if self.secondary_categories else []
+        except Exception:
+            sec_slugs = []
+        all_cat_slugs = [cat_slug] + [s for s in sec_slugs if s != cat_slug]
 
         return {
             'id': self.id,
@@ -174,6 +203,9 @@ class Destination(db.Model):
             'mainCategory': cat_slug,
             'categoryName': cat_name,
             'category': cat_name,
+            'categories': all_cat_slugs,
+            'categorySlugs': all_cat_slugs,
+            'secondaryCategories': sec_slugs,
             'location': self.location,
             'tag': self.tag,
             'coverImage': self.cover_image or hero_img,

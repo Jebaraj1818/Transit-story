@@ -119,6 +119,18 @@ export async function getDestinations(category = 'all') {
 }
 
 /**
+ * Synchronous read of the in-memory destinations cache.
+ * Returns the cached array when it exists (e.g. after a prior visit to Tours),
+ * or null when the cache is cold (first visit / hard refresh).
+ * Callers must still fire getDestinations() to keep the data fresh.
+ */
+export function getCachedDestinations() {
+  return cachedDestinations && cachedDestinations.length > 0
+    ? cachedDestinations
+    : null;
+}
+
+/**
  * Destination Details by Slug
  */
 export async function getDestinationBySlug(slug) {

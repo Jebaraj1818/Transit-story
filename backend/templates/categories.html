@@ -5,10 +5,14 @@
 
 {% block content %}
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;">
-  <!-- Categories List -->
-  <div class="card">
+  <!-- Categories List with M2M Destination Assignment -->
+  <div class="card" style="grid-column: 1 / -1;">
     <div class="card-header">
       <h2 class="card-title">Existing Categories ({{ categories|length }})</h2>
+      <div style="font-size: 0.8rem; color: #5A6058; margin-top: 0.25rem;">
+        Use <strong>Manage Destinations</strong> per category to assign any destination to multiple categories.
+        A destination's <em>primary category</em> is set on its own edit page.
+      </div>
     </div>
 
     <div class="table-responsive">
@@ -18,24 +22,57 @@
             <th>Name</th>
             <th>Slug</th>
             <th>Order</th>
+            <th>Multi-Category</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {% for cat in categories %}
             <tr>
+              <td><strong>{{ cat.name }}</strong></td>
+              <td><code style="font-size: 0.75rem;">{{ cat.slug }}</code></td>
+              <td><span style="font-size: 0.8rem; font-weight: 500;">{{ cat.display_order }}</span></td>
               <td>
-                <strong>{{ cat.name }}</strong>
+                {% set m2m_count = cat_dest_ids.get(cat.id, set())|length %}
+                <button type="button" class="btn btn-outline btn-sm" onclick="toggleAssignPanel({{ cat.id }})" style="font-size:0.75rem;">
+                  Manage Destinations
+                  {% if m2m_count > 0 %}
+                    <span style="background:#C49A45;color:#fff;border-radius:2px;padding:1px 5px;margin-left:4px;font-size:0.7rem;">{{ m2m_count }}</span>
+                  {% endif %}
+                </button>
               </td>
               <td>
-                <code style="font-size: 0.75rem;">{{ cat.slug }}</code>
+                <form method="POST" action="{{ url_for('admin.delete_category', cat_id=cat.id) }}" onsubmit="return confirm('Delete category {{ cat.name }}?');" style="display:inline;">
+                  <button type="submit" class="btn btn-outline btn-sm" style="color:#A63A2B;">✕</button>
+                </form>
               </td>
-              <td>
-                <span style="font-size: 0.8rem; font-weight: 500;">{{ cat.display_order }}</span>
-              </td>
-              <td>
-                <form method="POST" action="{{ url_for('admin.delete_category', cat_id=cat.id) }}" onsubmit="return confirm('Delete category {{ cat.name }}?');" style="display: inline;">
-                  <button type="submit" class="btn btn-outline btn-sm" style="color: #A63A2B;">✕</button>
+            </tr>
+
+            <!-- M2M Destination Assignment Panel (hidden by default) -->
+            <tr id="assign-panel-{{ cat.id }}" style="display:none;">
+              <td colspan="5" style="background:#FAF7F0;border-top:1px solid #E3DCBF;padding:1rem 1.25rem;">
+                <form method="POST" action="{{ url_for('admin.categories') }}">
+                  <input type="hidden" name="action" value="assign_destinations">
+                  <input type="hidden" name="cat_id" value="{{ cat.id }}">
+                  <div style="font-size:0.8rem;font-weight:600;color:#173A2D;margin-bottom:0.75rem;">
+                    Destinations in <em>{{ cat.name }}</em>
+                    <span style="font-weight:400;color:#5A6058;">— check any destination to include it. Destinations can belong to multiple categories.</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0.4rem 1rem;margin-bottom:1rem;">
+                    {% for dest in all_destinations %}
+                      {% set is_checked = dest.id in cat_dest_ids.get(cat.id, set()) %}
+                      <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer;padding:0.25rem 0.35rem;border-radius:2px;{% if is_checked %}background:#EEF4F0;{% endif %}">
+                        <input type="checkbox" name="dest_ids" value="{{ dest.id }}" {% if is_checked %}checked{% endif %}>
+                        <span>{{ dest.title }}{% if dest.category %} <span style="font-size:0.7rem;color:#8A9A88;">({{ dest.category.name }})</span>{% endif %}</span>
+                      </label>
+                    {% else %}
+                      <span style="color:#888;font-size:0.8rem;">No destinations exist yet.</span>
+                    {% endfor %}
+                  </div>
+                  <div style="display:flex;gap:0.5rem;align-items:center;">
+                    <button type="submit" class="btn btn-primary btn-sm">Save Assignments →</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="toggleAssignPanel({{ cat.id }})">Cancel</button>
+                  </div>
                 </form>
               </td>
             </tr>
@@ -50,34 +87,37 @@
     <div class="card-header">
       <h2 class="card-title">Add New Category</h2>
     </div>
-
     <form method="POST" action="{{ url_for('admin.categories') }}">
+      <input type="hidden" name="action" value="create">
       <div class="form-group">
         <label for="name">Category Name *</label>
-        <input type="text" id="name" name="name" class="form-control" required placeholder="e.g. Cultural & Heritage">
+        <input type="text" id="name" name="name" class="form-control" required placeholder="e.g. Popular Destinations">
       </div>
-
       <div class="form-group">
-        <label for="slug">Category Slug (e.g. cultural-heritage)</label>
+        <label for="slug">Category Slug (e.g. popular-destinations)</label>
         <input type="text" id="slug" name="slug" class="form-control" placeholder="Auto-generated if empty">
       </div>
-
       <div class="form-group">
         <label for="description">Category Description</label>
         <textarea id="description" name="description" rows="3" class="form-control" placeholder="Short description of this travel theme..."></textarea>
       </div>
-
       <div class="form-group">
         <label for="display_order">Display Order</label>
         <input type="number" id="display_order" name="display_order" class="form-control" value="{{ (categories|length) + 1 }}">
       </div>
-
-      <div style="margin-top: 1.5rem;">
-        <button type="submit" class="btn btn-primary" style="width: 100%;">
-          Create Category →
-        </button>
+      <div style="margin-top:1.5rem;">
+        <button type="submit" class="btn btn-primary" style="width:100%;">Create Category →</button>
       </div>
     </form>
   </div>
 </div>
+
+<script>
+function toggleAssignPanel(catId) {
+  var panel = document.getElementById('assign-panel-' + catId);
+  if (panel) {
+    panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'table-row' : 'none';
+  }
+}
+</script>
 {% endblock %}

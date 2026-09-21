@@ -4,7 +4,7 @@ import hashlib
 import secrets
 from datetime import datetime, timedelta
 from sqlalchemy import func
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import joinedload, selectinload, load_only
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, g
 from backend.config import Config
 from backend.db import db
@@ -591,6 +591,17 @@ def categories():
             # Destination IDs submitted via checkboxes (may be empty = clear all)
             selected_ids = set(int(v) for v in request.form.getlist('dest_ids') if v.isdigit())
 
+            # Find all primary destination IDs for this category
+            primary_dest_ids = set(
+                row[0] for row in
+                db.session.query(Destination.id)
+                .filter(Destination.category_id == cat.id)
+                .all()
+            )
+
+            # Primary destinations are managed via the destination editor, never in M2M table
+            secondary_selected_ids = selected_ids - primary_dest_ids
+
             # Current M2M assignments for this category
             try:
                 current_ids = set(
@@ -602,15 +613,26 @@ def categories():
             except Exception:
                 current_ids = set()
 
-            # Insert newly added
-            to_add = selected_ids - current_ids
+            # Clean up any stale duplicate M2M rows where destination is actually primary
+            stale_primary_in_m2m = current_ids & primary_dest_ids
+            if stale_primary_in_m2m:
+                db.session.execute(
+                    destination_categories.delete().where(
+                        (destination_categories.c.category_id == cat.id) &
+                        (destination_categories.c.destination_id.in_(stale_primary_in_m2m))
+                    )
+                )
+                current_ids = current_ids - stale_primary_in_m2m
+
+            # Insert newly added secondary
+            to_add = secondary_selected_ids - current_ids
             for dest_id in to_add:
                 db.session.execute(
                     destination_categories.insert().values(destination_id=dest_id, category_id=cat.id)
                 )
 
-            # Remove deselected
-            to_remove = current_ids - selected_ids
+            # Remove deselected secondary
+            to_remove = current_ids - secondary_selected_ids
             if to_remove:
                 db.session.execute(
                     destination_categories.delete().where(
@@ -694,23 +716,32 @@ def categories():
         
     cats = Category.query.order_by(Category.display_order.asc(), Category.name.asc()).all()
 
-    # For each category, collect currently M2M-assigned destination IDs (for assignment checkboxes)
-    cat_dest_ids = {}
-    for cat in cats:
+    # Efficient batch query for all M2M destination assignments (avoids N+1 query loop)
+    cat_dest_ids = {cat.id: set() for cat in cats}
+    if cats:
+        cat_ids = [cat.id for cat in cats]
         try:
-            cat_dest_ids[cat.id] = set(
-                row[0] for row in
-                db.session.query(destination_categories.c.destination_id)
-                .filter(destination_categories.c.category_id == cat.id)
+            m2m_rows = (
+                db.session.query(
+                    destination_categories.c.category_id,
+                    destination_categories.c.destination_id
+                )
+                .filter(destination_categories.c.category_id.in_(cat_ids))
                 .all()
             )
+            for c_id, d_id in m2m_rows:
+                if c_id in cat_dest_ids:
+                    cat_dest_ids[c_id].add(d_id)
         except Exception:
-            cat_dest_ids[cat.id] = set()
+            pass
 
-    # All destinations (published or not) for the assignment checkboxes
+    # All destinations (published or not) for the assignment checkboxes (load only required fields)
     all_destinations = (
         Destination.query
-        .options(joinedload(Destination.category))
+        .options(
+            load_only(Destination.id, Destination.title, Destination.category_id),
+            joinedload(Destination.category).load_only(Category.id, Category.name)
+        )
         .order_by(Destination.title.asc())
         .all()
     )

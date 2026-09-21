@@ -106,16 +106,29 @@
                 <form method="POST" action="{{ url_for('admin.categories') }}">
                   <input type="hidden" name="action" value="assign_destinations">
                   <input type="hidden" name="cat_id" value="{{ cat.id }}">
-                  <div style="font-size:0.8rem;font-weight:600;color:#173A2D;margin-bottom:0.75rem;">
+                  <div style="font-size:0.85rem;font-weight:600;color:#173A2D;margin-bottom:0.25rem;">
                     Destinations in <em>{{ cat.name }}</em>
-                    <span style="font-weight:400;color:#5A6058;">— check any destination to include it. Destinations can belong to multiple categories.</span>
                   </div>
-                  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0.4rem 1rem;margin-bottom:1rem;">
+                  <div style="font-size:0.75rem;color:#5A6058;margin-bottom:0.85rem;">
+                    Primary destinations are managed from the destination editor. Multi-category assignments can be changed here.
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0.45rem 1rem;margin-bottom:1rem;">
                     {% for dest in all_destinations %}
-                      {% set is_checked = dest.id in cat_dest_ids.get(cat.id, []) %}
-                      <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;cursor:pointer;padding:0.25rem 0.35rem;border-radius:2px;{% if is_checked %}background:#EEF4F0;{% endif %}">
-                        <input type="checkbox" name="dest_ids" value="{{ dest.id }}" {% if is_checked %}checked{% endif %}>
-                        <span>{{ dest.title }}{% if dest.category %} <span style="font-size:0.7rem;color:#8A9A88;">({{ dest.category.name }})</span>{% endif %}</span>
+                      {% set is_primary = (dest.category_id == cat.id) %}
+                      {% set is_secondary = (not is_primary and dest.id in cat_dest_ids.get(cat.id, [])) %}
+                      {% set is_checked = is_primary or is_secondary %}
+                      <label style="display:flex;align-items:center;gap:0.45rem;font-size:0.82rem;padding:0.3rem 0.45rem;border-radius:3px;{% if is_primary %}background:#E8EFEA;cursor:default;{% elif is_secondary %}background:#FDF6E2;cursor:pointer;{% else %}cursor:pointer;{% endif %}">
+                        <input type="checkbox" name="dest_ids" value="{{ dest.id }}" {% if is_checked %}checked{% endif %} {% if is_primary %}disabled style="opacity: 1; accent-color: #173A2D; cursor: default;"{% endif %}>
+                        <span style="display:flex;align-items:center;gap:0.35rem;flex-wrap:wrap;color:#173A2D;">
+                          <span>{{ dest.title }}</span>
+                          {% if is_primary %}
+                            <span style="font-size:0.68rem;font-weight:700;color:#173A2D;background:#D0E2D6;padding:1px 6px;border-radius:3px;">(Primary)</span>
+                          {% elif is_secondary %}
+                            <span style="font-size:0.68rem;font-weight:700;color:#855E0E;background:#FDEEC6;padding:1px 6px;border-radius:3px;">(Multi)</span>
+                          {% elif dest.category %}
+                            <span style="font-size:0.7rem;color:#8A9A88;">({{ dest.category.name }})</span>
+                          {% endif %}
+                        </span>
                       </label>
                     {% else %}
                       <span style="color:#888;font-size:0.8rem;">No destinations exist yet.</span>

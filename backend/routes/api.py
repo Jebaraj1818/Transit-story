@@ -46,7 +46,8 @@ def get_destinations():
     category_slug = request.args.get('category', '').strip().lower()
     
     base_query = Destination.query.options(
-        joinedload(Destination.category)
+        joinedload(Destination.category),
+        selectinload(Destination.secondary_categories)
     ).filter_by(is_published=True)
     
     if category_slug and category_slug != 'all':

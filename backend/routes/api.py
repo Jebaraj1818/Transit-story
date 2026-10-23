@@ -339,9 +339,15 @@ def get_testimonials():
     Public endpoint: Returns active testimonials ordered by display_order asc.
     Ensures only active testimonials with valid non-empty image URLs are returned.
     """
-    testimonials = Testimonial.query.filter_by(is_active=True).order_by(Testimonial.display_order.asc(), Testimonial.id.asc()).all()
-    valid_list = [t.to_dict() for t in testimonials if t.image_url and t.image_url.strip()]
-    resp = jsonify(valid_list)
-    resp.headers['Cache-Control'] = PUBLIC_CACHE_CONTROL
-    return resp
+    try:
+        testimonials = Testimonial.query.filter_by(is_active=True).order_by(Testimonial.display_order.asc(), Testimonial.id.asc()).all()
+        valid_list = [t.to_dict() for t in testimonials if t.image_url and t.image_url.strip()]
+        resp = jsonify(valid_list)
+        resp.headers['Cache-Control'] = PUBLIC_CACHE_CONTROL
+        return resp
+    except Exception as e:
+        db.session.rollback()
+        resp = jsonify([])
+        resp.headers['Cache-Control'] = PUBLIC_CACHE_CONTROL
+        return resp
 

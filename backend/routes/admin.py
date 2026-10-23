@@ -172,28 +172,44 @@ def reset_password(token):
 @admin_bp.route('/dashboard')
 @login_required
 def dashboard():
-    # Consolidate stat counters into a single SQL query using scalar subqueries
-    stats_row = db.session.query(
-        db.session.query(func.count(Destination.id)).scalar_subquery(),
-        db.session.query(func.count(Destination.id)).filter(Destination.is_published == True).scalar_subquery(),
-        db.session.query(func.count(Category.id)).scalar_subquery(),
-        db.session.query(func.count(Enquiry.id)).scalar_subquery(),
-        db.session.query(func.count(Enquiry.id)).filter(Enquiry.status == 'new').scalar_subquery(),
-        db.session.query(func.count(JourneyIdea.id)).filter(JourneyIdea.is_active == True).scalar_subquery(),
-        db.session.query(func.count(NewsletterSubscriber.id)).scalar_subquery(),
-        db.session.query(func.count(Testimonial.id)).filter(Testimonial.is_active == True).scalar_subquery(),
-    ).first()
+    try:
+        # Consolidate stat counters into a single SQL query using scalar subqueries
+        stats_row = db.session.query(
+            db.session.query(func.count(Destination.id)).scalar_subquery(),
+            db.session.query(func.count(Destination.id)).filter(Destination.is_published == True).scalar_subquery(),
+            db.session.query(func.count(Category.id)).scalar_subquery(),
+            db.session.query(func.count(Enquiry.id)).scalar_subquery(),
+            db.session.query(func.count(Enquiry.id)).filter(Enquiry.status == 'new').scalar_subquery(),
+            db.session.query(func.count(JourneyIdea.id)).filter(JourneyIdea.is_active == True).scalar_subquery(),
+            db.session.query(func.count(NewsletterSubscriber.id)).scalar_subquery(),
+            db.session.query(func.count(Testimonial.id)).filter(Testimonial.is_active == True).scalar_subquery(),
+        ).first()
 
-    (
-        total_destinations,
-        published_destinations,
-        total_categories,
-        total_enquiries,
-        new_enquiries,
-        journey_ideas_count,
-        total_subscribers,
-        testimonials_count
-    ) = stats_row if stats_row else (0, 0, 0, 0, 0, 0, 0, 0)
+        (
+            total_destinations,
+            published_destinations,
+            total_categories,
+            total_enquiries,
+            new_enquiries,
+            journey_ideas_count,
+            total_subscribers,
+            testimonials_count
+        ) = stats_row if stats_row else (0, 0, 0, 0, 0, 0, 0, 0)
+    except Exception as stat_err:
+        db.session.rollback()
+        # Fallback to individual counts if subquery fails
+        total_destinations = db.session.query(func.count(Destination.id)).scalar() or 0
+        published_destinations = db.session.query(func.count(Destination.id)).filter(Destination.is_published == True).scalar() or 0
+        total_categories = db.session.query(func.count(Category.id)).scalar() or 0
+        total_enquiries = db.session.query(func.count(Enquiry.id)).scalar() or 0
+        new_enquiries = db.session.query(func.count(Enquiry.id)).filter(Enquiry.status == 'new').scalar() or 0
+        journey_ideas_count = db.session.query(func.count(JourneyIdea.id)).filter(JourneyIdea.is_active == True).scalar() or 0
+        total_subscribers = db.session.query(func.count(NewsletterSubscriber.id)).scalar() or 0
+        try:
+            testimonials_count = db.session.query(func.count(Testimonial.id)).filter(Testimonial.is_active == True).scalar() or 0
+        except Exception:
+            db.session.rollback()
+            testimonials_count = 0
     
     recent_enquiries = Enquiry.query.order_by(Enquiry.created_at.desc()).limit(6).all()
     recent_destinations = (
@@ -203,12 +219,16 @@ def dashboard():
         .limit(5)
         .all()
     )
-    recent_testimonials = (
-        Testimonial.query
-        .order_by(Testimonial.display_order.asc(), Testimonial.id.desc())
-        .limit(4)
-        .all()
-    )
+    try:
+        recent_testimonials = (
+            Testimonial.query
+            .order_by(Testimonial.display_order.asc(), Testimonial.id.desc())
+            .limit(4)
+            .all()
+        )
+    except Exception:
+        db.session.rollback()
+        recent_testimonials = []
     
     return render_template(
         'dashboard.html',

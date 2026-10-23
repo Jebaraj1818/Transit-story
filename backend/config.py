@@ -81,13 +81,16 @@ class Config(metaclass=ConfigMeta):
     APP_BASE_URL = os.environ.get('APP_BASE_URL', 'http://localhost:3000').rstrip('/')
 
     # Vercel Blob Cloud Storage Configuration (Public Media Store)
-    TRANSIT_BLOB_READ_WRITE_TOKEN = os.environ.get('TRANSIT_BLOB_READ_WRITE_TOKEN', '').strip()
+    TRANSIT_BLOB_READ_WRITE_TOKEN = (os.environ.get('TRANSIT_BLOB_READ_WRITE_TOKEN') or os.environ.get('BLOB_READ_WRITE_TOKEN') or '').strip()
     BLOB_READ_WRITE_TOKEN = TRANSIT_BLOB_READ_WRITE_TOKEN
 
     # Session cookie config for admin authentication
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     SESSION_COOKIE_SECURE = os.environ.get('FLASK_ENV') == 'production'
+
+    # Auto-reload templates when modified in development
+    TEMPLATES_AUTO_RELOAD = True
 
 def ensure_database_exists():
     """Connects to MySQL server and creates the database if it doesn't already exist."""

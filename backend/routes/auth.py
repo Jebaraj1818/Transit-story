@@ -25,7 +25,7 @@ def login_required(f):
             if request.path.startswith('/api/admin') or request.path.startswith('/admin/api') or request.is_json:
                 return jsonify({'error': 'Unauthorized. Admin login required.'}), 401
             flash('Please log in to access the curator desk.', 'warning')
-            return redirect(url_for('admin.login', next=request.url))
+            return redirect(url_for('admin.login', next=request.path))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -37,7 +37,7 @@ def super_admin_required(f):
             if request.path.startswith('/api/admin'):
                 return jsonify({'error': 'Unauthorized. Admin login required.'}), 401
             flash('Please log in to access this area.', 'warning')
-            return redirect(url_for('admin.login', next=request.url))
+            return redirect(url_for('admin.login', next=request.path))
         if not admin.is_super_admin:
             if request.path.startswith('/api/admin'):
                 return jsonify({'error': 'Forbidden. Super Admin privileges required.'}), 403

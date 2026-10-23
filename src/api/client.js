@@ -350,3 +350,49 @@ export async function subscribeNewsletter(email) {
     body: JSON.stringify({ email })
   });
 }
+
+/**
+ * Customer Testimonials (WhatsApp screenshots)
+ */
+export const DEFAULT_TESTIMONIALS = [
+  {
+    id: 1,
+    title: 'Munnar & Kerala Holiday Journey',
+    customerName: 'Holiday Traveler',
+    imageUrl: '/images/testimonials/testimonial1.jpeg',
+    displayOrder: 1,
+    isActive: true,
+  },
+  {
+    id: 2,
+    title: 'South India Heritage Tour',
+    customerName: 'Family Travel Group',
+    imageUrl: '/images/testimonials/testimonial2.jpeg',
+    displayOrder: 2,
+    isActive: true,
+  },
+];
+
+let cachedTestimonials = null;
+
+export async function getTestimonials() {
+  if (cachedTestimonials && cachedTestimonials.length > 0) {
+    fetchJson(`${API_BASE}/testimonials`).then((data) => {
+      if (Array.isArray(data) && data.length > 0) {
+        cachedTestimonials = data;
+      }
+    }).catch(() => {});
+    return cachedTestimonials;
+  }
+
+  try {
+    const data = await fetchJson(`${API_BASE}/testimonials`);
+    if (Array.isArray(data) && data.length > 0) {
+      cachedTestimonials = data;
+      return cachedTestimonials;
+    }
+  } catch (err) {
+    // Graceful fallback
+  }
+  return DEFAULT_TESTIMONIALS;
+}

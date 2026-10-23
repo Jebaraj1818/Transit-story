@@ -55,6 +55,9 @@
       <a href="{{ url_for('admin.stories') }}" class="nav-item {% if request.endpoint == 'admin.stories' %}active{% endif %}">
         <span>Stories</span>
       </a>
+      <a href="{{ url_for('admin.testimonials') }}" class="nav-item {% if request.endpoint in ['admin.testimonials', 'admin.edit_testimonial'] %}active{% endif %}">
+        <span>Customer Testimonials</span>
+      </a>
       <a href="{{ url_for('admin.faqs') }}" class="nav-item {% if request.endpoint == 'admin.faqs' %}active{% endif %}">
         <span>FAQs</span>
       </a>

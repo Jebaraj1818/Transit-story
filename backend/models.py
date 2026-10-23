@@ -448,3 +448,30 @@ class EmailLog(db.Model):
             'error_message': self.error_message,
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M') if self.created_at else None
         }
+
+class Testimonial(db.Model):
+    __tablename__ = 'testimonials'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(150), nullable=True)  # Optional internal/context label (e.g. "Kochi Backwaters Tour")
+    customer_name = db.Column(db.String(150), nullable=True)  # Optional customer name or group label
+    image_url = db.Column(db.String(500), nullable=False)  # WhatsApp review screenshot URL
+    display_order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title or '',
+            'customerName': self.customer_name or '',
+            'customer_name': self.customer_name or '',
+            'imageUrl': self.image_url,
+            'image_url': self.image_url,
+            'displayOrder': self.display_order,
+            'display_order': self.display_order,
+            'isActive': self.is_active,
+            'is_active': self.is_active,
+            'createdAt': self.created_at.strftime('%Y-%m-%d %H:%M') if self.created_at else None
+        }

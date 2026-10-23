@@ -12,7 +12,7 @@ from backend.models import (
     Admin, AdminPasswordResetToken, Category, Destination, DestinationGallery,
     DestinationHighlight, DestinationExperience, Service,
     Enquiry, FAQ, JourneyIdea, SiteSetting, Story, NewsletterSubscriber, EmailLog,
-    destination_categories
+    destination_categories, Testimonial
 )
 from backend.routes.auth import login_required, super_admin_required, get_current_admin
 from backend.services.email_service import (
@@ -58,7 +58,9 @@ def login():
             session['admin_id'] = admin.id
             session.permanent = True
             flash(f"Welcome back, {admin.name}!", "success")
-            next_page = request.args.get('next') or url_for('admin.dashboard')
+            next_page = request.args.get('next') or ''
+            if not next_page.startswith('/admin') or next_page.startswith('//'):
+                next_page = url_for('admin.dashboard')
             return redirect(next_page)
         else:
             flash("Invalid email address or password.", "danger")
@@ -179,6 +181,7 @@ def dashboard():
         db.session.query(func.count(Enquiry.id)).filter(Enquiry.status == 'new').scalar_subquery(),
         db.session.query(func.count(JourneyIdea.id)).filter(JourneyIdea.is_active == True).scalar_subquery(),
         db.session.query(func.count(NewsletterSubscriber.id)).scalar_subquery(),
+        db.session.query(func.count(Testimonial.id)).filter(Testimonial.is_active == True).scalar_subquery(),
     ).first()
 
     (
@@ -188,8 +191,9 @@ def dashboard():
         total_enquiries,
         new_enquiries,
         journey_ideas_count,
-        total_subscribers
-    ) = stats_row if stats_row else (0, 0, 0, 0, 0, 0, 0)
+        total_subscribers,
+        testimonials_count
+    ) = stats_row if stats_row else (0, 0, 0, 0, 0, 0, 0, 0)
     
     recent_enquiries = Enquiry.query.order_by(Enquiry.created_at.desc()).limit(6).all()
     recent_destinations = (
@@ -197,6 +201,12 @@ def dashboard():
         .options(joinedload(Destination.category))
         .order_by(Destination.updated_at.desc())
         .limit(5)
+        .all()
+    )
+    recent_testimonials = (
+        Testimonial.query
+        .order_by(Testimonial.display_order.asc(), Testimonial.id.desc())
+        .limit(4)
         .all()
     )
     
@@ -210,9 +220,11 @@ def dashboard():
             'new_enquiries': new_enquiries,
             'journey_ideas_count': journey_ideas_count,
             'total_subscribers': total_subscribers,
+            'testimonials_count': testimonials_count,
         },
         recent_enquiries=recent_enquiries,
-        recent_destinations=recent_destinations
+        recent_destinations=recent_destinations,
+        recent_testimonials=recent_testimonials
     )
 
 # ------------------------------------------------------------------------------
@@ -916,6 +928,91 @@ def delete_story(story_id):
         safe_cleanup_unused_blob(img)
     flash(f"Story '{story.title}' deleted.", "info")
     return redirect(url_for('admin.stories'))
+
+# ------------------------------------------------------------------------------
+# TESTIMONIALS MANAGEMENT
+# ------------------------------------------------------------------------------
+
+@admin_bp.route('/testimonials', methods=['GET', 'POST'])
+@login_required
+def testimonials():
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        customer_name = request.form.get('customer_name', '').strip()
+        image_url = request.form.get('image_url', '').strip()
+        display_order = int(request.form.get('display_order', 0) or 0)
+        is_active = 'is_active' in request.form
+        
+        if not image_url:
+            flash("Screenshot image URL is required. Please upload or provide a valid image URL.", "danger")
+            return redirect(url_for('admin.testimonials'))
+            
+        testimonial = Testimonial(
+            title=title,
+            customer_name=customer_name,
+            image_url=image_url,
+            display_order=display_order,
+            is_active=is_active
+        )
+        db.session.add(testimonial)
+        db.session.commit()
+        flash("Customer testimonial screenshot added successfully.", "success")
+        return redirect(url_for('admin.testimonials'))
+        
+    testimonial_list = Testimonial.query.order_by(Testimonial.display_order.asc(), Testimonial.id.desc()).all()
+    return render_template('testimonials.html', testimonials=testimonial_list, blob_configured=is_blob_configured())
+
+@admin_bp.route('/testimonials/<int:testimonial_id>/edit', methods=['POST'])
+@login_required
+def edit_testimonial(testimonial_id):
+    testimonial = Testimonial.query.get_or_404(testimonial_id)
+    old_img = testimonial.image_url
+    
+    title = request.form.get('title', '').strip()
+    customer_name = request.form.get('customer_name', '').strip()
+    image_url = request.form.get('image_url', '').strip()
+    display_order = int(request.form.get('display_order', 0) or 0)
+    is_active = 'is_active' in request.form
+    
+    if not image_url:
+        flash("Screenshot image URL cannot be blank.", "danger")
+        return redirect(url_for('admin.testimonials'))
+        
+    testimonial.title = title
+    testimonial.customer_name = customer_name
+    testimonial.image_url = image_url
+    testimonial.display_order = display_order
+    testimonial.is_active = is_active
+    db.session.commit()
+    
+    # Safe Blob cleanup if image was replaced with a different URL
+    if old_img and old_img != image_url and is_blob_url(old_img):
+        safe_cleanup_unused_blob(old_img)
+        
+    flash("Testimonial updated successfully.", "success")
+    return redirect(url_for('admin.testimonials'))
+
+@admin_bp.route('/testimonials/<int:testimonial_id>/toggle', methods=['POST'])
+@login_required
+def toggle_testimonial(testimonial_id):
+    testimonial = Testimonial.query.get_or_404(testimonial_id)
+    testimonial.is_active = not testimonial.is_active
+    db.session.commit()
+    status_str = "activated" if testimonial.is_active else "deactivated"
+    flash(f"Testimonial {status_str}.", "info")
+    return redirect(url_for('admin.testimonials'))
+
+@admin_bp.route('/testimonials/<int:testimonial_id>/delete', methods=['POST'])
+@login_required
+def delete_testimonial(testimonial_id):
+    testimonial = Testimonial.query.get_or_404(testimonial_id)
+    img = testimonial.image_url
+    db.session.delete(testimonial)
+    db.session.commit()
+    if img and is_blob_url(img):
+        safe_cleanup_unused_blob(img)
+    flash("Customer testimonial deleted.", "info")
+    return redirect(url_for('admin.testimonials'))
 
 # ------------------------------------------------------------------------------
 # NEWSLETTER SUBSCRIBERS

@@ -26,6 +26,7 @@ import SectionHeading from '../components/SectionHeading';
 import { DESTINATIONS } from '../data/destinations';
 import { subscribeNewsletter, getJourneyIdeas, getSiteSettings, getCategories } from '../api/client';
 import { resolveMediaUrl } from '../utils/media';
+import TestimonialsGallery from '../components/TestimonialsGallery';
 
 // Order: 1. Photo (5s) -> 2. Photo (5s) -> 3. Photo (5s) -> Loop
 const DEFAULT_HERO_SLIDES = [
@@ -1488,6 +1489,11 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* SECTION: WORDS FROM THE JOURNEY (Customer Testimonials Screenshot Gallery) */}
+      {/* ========================================================================= */}
+      <TestimonialsGallery />
 
       {/* ========================================================================= */}
       {/* SECTION 7 — NEWSLETTER SUBSCRIPTION (Editorial Travel Dispatches)         */}

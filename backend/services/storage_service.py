@@ -275,7 +275,7 @@ def get_media_references(url):
         return []
 
     try:
-        from backend.models import SiteSetting, Destination, DestinationGallery, Service, Story
+        from backend.models import SiteSetting, Destination, DestinationGallery, Service, Story, Testimonial
         from sqlalchemy import or_
     except Exception as imp_err:
         logger.error(f"[Storage Service] Error importing models for reference check: {imp_err}")
@@ -315,7 +315,13 @@ def get_media_references(url):
         for st in stories:
             references.append(f"Story({st.slug})")
 
-        # 6. Embedded media in rich text / descriptions
+        # 6. Testimonials
+        testimonials = Testimonial.query.filter(Testimonial.image_url == clean_url).all()
+        for t in testimonials:
+            t_label = t.title or t.customer_name or f"id_{t.id}"
+            references.append(f"Testimonial({t_label})")
+
+        # 7. Embedded media in rich text / descriptions
         content_dests = Destination.query.filter(
             or_(
                 Destination.description.contains(clean_url),

@@ -4,7 +4,8 @@ from flask import Blueprint, jsonify, request
 from backend.db import db
 from backend.models import (
     Category, Destination, Service, FAQ, JourneyIdea,
-    SiteSetting, Story, Enquiry, NewsletterSubscriber, destination_categories
+    SiteSetting, Story, Enquiry, NewsletterSubscriber, destination_categories,
+    Testimonial
 )
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -331,4 +332,16 @@ def subscribe_newsletter():
         'success': True,
         'message': "You're on the list. Thank you for subscribing."
     }), 200
+
+@api_bp.route('/testimonials', methods=['GET'])
+def get_testimonials():
+    """
+    Public endpoint: Returns active testimonials ordered by display_order asc.
+    Ensures only active testimonials with valid non-empty image URLs are returned.
+    """
+    testimonials = Testimonial.query.filter_by(is_active=True).order_by(Testimonial.display_order.asc(), Testimonial.id.asc()).all()
+    valid_list = [t.to_dict() for t in testimonials if t.image_url and t.image_url.strip()]
+    resp = jsonify(valid_list)
+    resp.headers['Cache-Control'] = PUBLIC_CACHE_CONTROL
+    return resp
 

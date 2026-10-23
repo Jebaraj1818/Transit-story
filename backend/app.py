@@ -99,6 +99,25 @@ def create_app(config_class=Config):
                 except Exception as dc_err:
                     db.session.rollback()
                     print(f"[DB Migration Notice] destination_categories table: {dc_err}")
+
+                # Ensure the testimonials table exists
+                try:
+                    db.session.execute(_text(
+                        "CREATE TABLE IF NOT EXISTS testimonials ("
+                        "  id INT AUTO_INCREMENT PRIMARY KEY,"
+                        "  title VARCHAR(150) NULL,"
+                        "  customer_name VARCHAR(150) NULL,"
+                        "  image_url VARCHAR(500) NOT NULL,"
+                        "  display_order INT DEFAULT 0,"
+                        "  is_active TINYINT(1) DEFAULT 1 NOT NULL,"
+                        "  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                        "  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+                    ))
+                    db.session.commit()
+                except Exception as t_err:
+                    db.session.rollback()
+                    print(f"[DB Migration Notice] testimonials table: {t_err}")
                 # Verify and migrate any new columns on existing tables
                 from sqlalchemy import text
                 try:

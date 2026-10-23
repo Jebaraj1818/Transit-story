@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Testimonials — Transit Story{% endblock %}
+{% block page_title %}Customer Testimonials & Journey Reviews{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem; align-items: start;">
+  <!-- Testimonials List -->
+  <div class="card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <h2 class="card-title">Active Gallery Screenshots ({{ testimonials|length }})</h2>
+      <span style="font-size: 0.75rem; color: #5A6058;">
+        {% if blob_configured %}
+          <span style="color: #065F46; font-weight: 500;">● Cloud Storage Active</span>
+        {% else %}
+          <span style="color: #A63A2B;" title="Add BLOB_READ_WRITE_TOKEN to .env to enable direct cloud uploads">○ Blob Unconfigured</span>
+        {% endif %}
+      </span>
+    </div>
+
+    {% if not testimonials %}
+      <div style="padding: 2.5rem 1rem; text-align: center; color: #666;">
+        <p style="margin-bottom: 0.5rem; font-size: 0.95rem;">No customer review screenshots uploaded yet.</p>
+        <p style="font-size: 0.8rem; color: #888;">Use the form to upload and publish WhatsApp review screenshots to the homepage gallery.</p>
+      </div>
+    {% else %}
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th style="width: 70px;">Preview</th>
+              <th>Context / Customer</th>
+              <th style="width: 70px; text-align: center;">Order</th>
+              <th style="width: 80px; text-align: center;">Status</th>
+              <th style="width: 130px; text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in testimonials %}
+              <tr>
+                <td>
+                  <a href="{{ t.image_url }}" target="_blank" rel="noopener noreferrer" title="View full screenshot">
+                    <img src="{{ t.image_url }}" alt="{{ t.title or 'WhatsApp Screenshot' }}"
+                         style="width: 52px; height: 78px; object-fit: contain; background: #ECE6D8; border: 1px solid #D8D0BF; border-radius: 3px; display: block;">
+                  </a>
+                </td>
+                <td>
+                  <div style="font-weight: 600; color: #173A2D; font-size: 0.88rem;">
+                    {{ t.title or '(Untitled review)' }}
+                  </div>
+                  {% if t.customer_name %}
+                    <div style="font-size: 0.78rem; color: #5A6058; margin-top: 2px;">
+                      Client: <em>{{ t.customer_name }}</em>
+                    </div>
+                  {% endif %}
+                  <div style="font-size: 0.68rem; color: #888; margin-top: 3px; word-break: break-all; max-width: 260px;">
+                    {{ t.image_url }}
+                  </div>
+                </td>
+                <td style="text-align: center; font-weight: 600; color: #173A2D;">
+                  {{ t.display_order }}
+                </td>
+                <td style="text-align: center;">
+                  <form method="POST" action="{{ url_for('admin.toggle_testimonial', testimonial_id=t.id) }}" style="display: inline;">
+                    {% if t.is_active %}
+                      <button type="submit" class="badge" style="background: rgba(6, 95, 70, 0.15); color: #065F46; border: 1px solid rgba(6, 95, 70, 0.3); cursor: pointer; padding: 3px 8px; border-radius: 3px;" title="Click to hide">
+                        Active
+                      </button>
+                    {% else %}
+                      <button type="submit" class="badge" style="background: rgba(166, 58, 43, 0.12); color: #A63A2B; border: 1px solid rgba(166, 58, 43, 0.25); cursor: pointer; padding: 3px 8px; border-radius: 3px;" title="Click to publish">
+                        Hidden
+                      </button>
+                    {% endif %}
+                  </form>
+                </td>
+                <td style="text-align: right; white-space: nowrap;">
+                  <button type="button" class="btn btn-outline btn-sm"
+                          onclick="openEditTestimonial({{ t.id }}, '{{ t.title|replace('\'', '\\\'') }}', '{{ t.customer_name|replace('\'', '\\\'') }}', '{{ t.image_url|replace('\'', '\\\'') }}', {{ t.display_order }}, {{ 'true' if t.is_active else 'false' }})"
+                          style="margin-right: 4px;" title="Edit details">
+                    ✎ Edit
+                  </button>
+                  <form method="POST" action="{{ url_for('admin.delete_testimonial', testimonial_id=t.id) }}"
+                        onsubmit="return confirm('Delete this testimonial screenshot permanently?');"
+                        style="display: inline;">
+                    <button type="submit" class="btn btn-outline btn-sm" style="color: #A63A2B;" title="Delete">✕</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Create New Testimonial -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Add Review Screenshot</h2>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin.testimonials') }}" id="createTestimonialForm">
+      <div class="form-group">
+        <label for="title">Title / Context Label (Optional)</label>
+        <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Munnar Hill Station Tour">
+        <small style="color: #666; font-size: 0.72rem;">Internal reference label describing the tour or destination.</small>
+      </div>
+
+      <div class="form-group">
+        <label for="customer_name">Customer / Group Name (Optional)</label>
+        <input type="text" id="customer_name" name="customer_name" class="form-control" placeholder="e.g. Arvind & Family, Chennai">
+      </div>
+
+      <div class="form-group">
+        <label for="image_url">WhatsApp Screenshot Image URL *</label>
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem;">
+          <input type="text" id="image_url" name="image_url" class="form-control" required
+                 placeholder="https://...blob.vercel-storage.com/... or /images/..."
+                 oninput="updatePreview(this.value)">
+          <label class="btn btn-outline btn-sm" style="display: flex; align-items: center; gap: 0.25rem; white-space: nowrap; cursor: pointer; margin: 0;" title="Upload screenshot to cloud storage">
+            <span>📁 Upload</span>
+            <input type="file" accept="image/*" style="display: none;" onchange="handleUploadScreenshot(this, 'image_url', 'preview_container', 'preview_img')">
+          </label>
+        </div>
+        <small style="color: #666; font-size: 0.72rem;">Upload portrait WhatsApp review screenshots directly to Vercel Blob cloud storage.</small>
+
+        <!-- Image Preview Box -->
+        <div id="preview_container" style="display: none; margin-top: 0.6rem; text-align: center; border: 1px solid #E0D7BD; border-radius: 4px; padding: 0.75rem; background: #ECE6D8; position: relative;">
+          <img id="preview_img" src="" alt="Screenshot preview"
+               style="max-height: 220px; max-width: 100%; object-fit: contain; border-radius: 3px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <button type="button" onclick="clearPreview('image_url', 'preview_container', 'preview_img')"
+                  style="position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 2px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer;">✕</button>
+        </div>
+      </div>
+
+      <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label for="display_order">Display Order</label>
+          <input type="number" id="display_order" name="display_order" class="form-control" value="0" min="0" step="1">
+          <small style="color: #666; font-size: 0.72rem;">Lower numbers appear first.</small>
+        </div>
+        <div class="form-group" style="display: flex; flex-direction: column; justify-content: center;">
+          <label style="margin-bottom: 0.5rem;">Visibility</label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.88rem;">
+            <input type="checkbox" id="is_active" name="is_active" checked style="width: 16px; height: 16px;">
+            <span>Publish to Homepage</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.25rem;">
+        <button type="submit" class="btn btn-gold" style="width: 100%;">
+          <span>+ Add Customer Testimonial</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.6); backdrop-filter: blur(2px); align-items: center; justify-content: center; padding: 1rem;">
+  <div class="card" style="width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; background: #FAF7F0; margin: auto;">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <h2 class="card-title">Edit Customer Testimonial</h2>
+      <button type="button" onclick="closeEditModal()" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #173A2D;">✕</button>
+    </div>
+
+    <form method="POST" id="editTestimonialForm" action="">
+      <div class="form-group">
+        <label for="edit_title">Title / Context Label</label>
+        <input type="text" id="edit_title" name="title" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label for="edit_customer_name">Customer / Group Name</label>
+        <input type="text" id="edit_customer_name" name="customer_name" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label for="edit_image_url">Screenshot Image URL *</label>
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.4rem;">
+          <input type="text" id="edit_image_url" name="image_url" class="form-control" required
+                 oninput="updatePreview(this.value, 'edit_preview_container', 'edit_preview_img')">
+          <label class="btn btn-outline btn-sm" style="display: flex; align-items: center; gap: 0.25rem; white-space: nowrap; cursor: pointer; margin: 0;" title="Upload replacement screenshot">
+            <span>📁 Upload</span>
+            <input type="file" accept="image/*" style="display: none;" onchange="handleUploadScreenshot(this, 'edit_image_url', 'edit_preview_container', 'edit_preview_img')">
+          </label>
+        </div>
+        <div id="edit_preview_container" style="text-align: center; border: 1px solid #E0D7BD; border-radius: 4px; padding: 0.75rem; background: #ECE6D8; position: relative;">
+          <img id="edit_preview_img" src="" alt="Edit screenshot preview"
+               style="max-height: 200px; max-width: 100%; object-fit: contain; border-radius: 3px;">
+        </div>
+      </div>
+
+      <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label for="edit_display_order">Display Order</label>
+          <input type="number" id="edit_display_order" name="display_order" class="form-control" min="0" step="1">
+        </div>
+        <div class="form-group" style="display: flex; flex-direction: column; justify-content: center;">
+          <label style="margin-bottom: 0.5rem;">Visibility</label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.88rem;">
+            <input type="checkbox" id="edit_is_active" name="is_active" style="width: 16px; height: 16px;">
+            <span>Active / Published</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
+        <button type="submit" class="btn btn-gold" style="flex: 1;">Save Changes</button>
+        <button type="button" onclick="closeEditModal()" class="btn btn-outline">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+async function handleUploadScreenshot(inputElem, targetInputId, containerId, previewImgId) {
+  if (!inputElem.files || !inputElem.files[0]) return;
+  const file = inputElem.files[0];
+  const targetInput = document.getElementById(targetInputId);
+  const btnLabel = inputElem.parentElement.querySelector('span');
+  const originalText = btnLabel.textContent;
+
+  btnLabel.textContent = '⏳';
+  inputElem.parentElement.style.opacity = '0.7';
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('folder', 'testimonials');
+
+  try {
+    const res = await fetch("{{ url_for('admin.media_upload') }}", {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (res.ok && data.success && data.url) {
+      targetInput.value = data.url;
+      updatePreview(data.url, containerId, previewImgId);
+    } else {
+      alert(data.message || 'Upload failed. Check server Blob configuration.');
+    }
+  } catch (err) {
+    alert('Network error while uploading image.');
+  } finally {
+    btnLabel.textContent = originalText;
+    inputElem.parentElement.style.opacity = '1';
+    inputElem.value = '';
+  }
+}
+
+function updatePreview(url, containerId = 'preview_container', previewImgId = 'preview_img') {
+  const container = document.getElementById(containerId);
+  const img = document.getElementById(previewImgId);
+  if (url && url.trim()) {
+    img.src = url.trim();
+    container.style.display = 'block';
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+function clearPreview(targetInputId, containerId, previewImgId) {
+  document.getElementById(targetInputId).value = '';
+  document.getElementById(containerId).style.display = 'none';
+}
+
+function openEditTestimonial(id, title, customerName, imageUrl, displayOrder, isActive) {
+  const modal = document.getElementById('editModal');
+  const form = document.getElementById('editTestimonialForm');
+  form.action = '/admin/testimonials/' + id + '/edit';
+
+  document.getElementById('edit_title').value = title;
+  document.getElementById('edit_customer_name').value = customerName;
+  document.getElementById('edit_image_url').value = imageUrl;
+  document.getElementById('edit_display_order').value = displayOrder;
+  document.getElementById('edit_is_active').checked = isActive;
+
+  updatePreview(imageUrl, 'edit_preview_container', 'edit_preview_img');
+
+  modal.style.display = 'flex';
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').style.display = 'none';
+}
+
+// Close modal on Escape
+window.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeEditModal();
+});
+</script>
+{% endblock %}

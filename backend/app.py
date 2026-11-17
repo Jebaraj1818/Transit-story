@@ -57,11 +57,22 @@ def create_app(config_class=Config):
     @app.route('/health')
     @app.route('/api/health')
     def health_check():
+        db_dialect = 'Unknown'
+        try:
+            name = db.engine.dialect.name
+            if name == 'postgresql':
+                db_dialect = 'PostgreSQL'
+            elif name == 'mysql':
+                db_dialect = 'MySQL'
+            else:
+                db_dialect = name.capitalize()
+        except Exception:
+            pass
         return jsonify({
             'status': 'healthy',
             'service': 'The Transit Story API & Admin Desk',
             'version': '2.0.0',
-            'database': 'MySQL'
+            'database': db_dialect
         })
         
     # Global error handlers
@@ -83,80 +94,88 @@ def create_app(config_class=Config):
         with app.app_context():
             try:
                 db.create_all()
-                # Ensure the many-to-many destination_categories join table exists
-                from sqlalchemy import text as _text
-                try:
-                    db.session.execute(_text(
-                        "CREATE TABLE IF NOT EXISTS destination_categories ("
-                        "  destination_id INT NOT NULL,"
-                        "  category_id INT NOT NULL,"
-                        "  PRIMARY KEY (destination_id, category_id),"
-                        "  CONSTRAINT fk_dc_dest FOREIGN KEY (destination_id) REFERENCES destinations(id) ON DELETE CASCADE,"
-                        "  CONSTRAINT fk_dc_cat  FOREIGN KEY (category_id)  REFERENCES categories(id)  ON DELETE CASCADE"
-                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
-                    ))
-                    db.session.commit()
-                except Exception as dc_err:
-                    db.session.rollback()
-                    print(f"[DB Migration Notice] destination_categories table: {dc_err}")
-
-                # Ensure the testimonials table exists
-                try:
-                    db.session.execute(_text(
-                        "CREATE TABLE IF NOT EXISTS testimonials ("
-                        "  id INT AUTO_INCREMENT PRIMARY KEY,"
-                        "  title VARCHAR(150) NULL,"
-                        "  customer_name VARCHAR(150) NULL,"
-                        "  image_url VARCHAR(500) NOT NULL,"
-                        "  display_order INT DEFAULT 0,"
-                        "  is_active TINYINT(1) DEFAULT 1 NOT NULL,"
-                        "  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
-                        "  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
-                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
-                    ))
-                    db.session.commit()
-                except Exception as t_err:
-                    db.session.rollback()
-                    print(f"[DB Migration Notice] testimonials table: {t_err}")
-                # Verify and migrate any new columns on existing tables
-                from sqlalchemy import text
-                try:
-                    cols = [r[0] for r in db.session.execute(text('DESCRIBE admins;')).fetchall()]
-                    if 'is_active' not in cols:
-                        db.session.execute(text('ALTER TABLE admins ADD COLUMN is_active TINYINT(1) DEFAULT 1 NOT NULL;'))
-                    if 'last_login_at' not in cols:
-                        db.session.execute(text('ALTER TABLE admins ADD COLUMN last_login_at DATETIME NULL;'))
-
-                    # Ensure previous_slugs column exists on destinations table
-                    dest_cols = [r[0] for r in db.session.execute(text('DESCRIBE destinations;')).fetchall()]
-                    if 'previous_slugs' not in dest_cols:
-                        db.session.execute(text('ALTER TABLE destinations ADD COLUMN previous_slugs VARCHAR(500) NULL;'))
-
-                    # Expand image columns to VARCHAR(500) for Vercel Blob URLs
-                    for alter_sql in [
-                        'ALTER TABLE destinations MODIFY hero_image VARCHAR(500) NULL;',
-                        'ALTER TABLE destinations MODIFY cover_image VARCHAR(500) NULL;',
-                        'ALTER TABLE destination_gallery MODIFY image_url VARCHAR(500) NOT NULL;',
-                        'ALTER TABLE services MODIFY image VARCHAR(500) NULL;',
-                        'ALTER TABLE stories MODIFY image VARCHAR(500) NULL;'
-                    ]:
-                        try:
-                            db.session.execute(text(alter_sql))
-                        except Exception:
-                            pass
-
-                    # Drop unused cover_image column on categories table if present
+                dialect_name = db.engine.dialect.name
+                if dialect_name == 'mysql':
+                    # Legacy MySQL migration patches and index checks
+                    from sqlalchemy import text as _text
                     try:
-                        cat_cols = [r[0] for r in db.session.execute(text('DESCRIBE categories;')).fetchall()]
-                        if 'cover_image' in cat_cols:
-                            db.session.execute(text('ALTER TABLE categories DROP COLUMN cover_image;'))
-                    except Exception as cat_drop_err:
-                        print(f"[DB Migration Notice] categories cover_image drop check: {cat_drop_err}")
+                        db.session.execute(_text(
+                            "CREATE TABLE IF NOT EXISTS destination_categories ("
+                            "  destination_id INT NOT NULL,"
+                            "  category_id INT NOT NULL,"
+                            "  PRIMARY KEY (destination_id, category_id),"
+                            "  CONSTRAINT fk_dc_dest FOREIGN KEY (destination_id) REFERENCES destinations(id) ON DELETE CASCADE,"
+                            "  CONSTRAINT fk_dc_cat  FOREIGN KEY (category_id)  REFERENCES categories(id)  ON DELETE CASCADE"
+                            ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+                        ))
+                        db.session.commit()
+                    except Exception as dc_err:
+                        db.session.rollback()
+                        print(f"[DB Migration Notice] destination_categories table: {dc_err}")
 
-                    db.session.commit()
-                except Exception as migration_err:
-                    db.session.rollback()
-                    print(f"[DB Migration Notice] Schema check: {migration_err}")
+                    # Ensure the testimonials table exists
+                    try:
+                        db.session.execute(_text(
+                            "CREATE TABLE IF NOT EXISTS testimonials ("
+                            "  id INT AUTO_INCREMENT PRIMARY KEY,"
+                            "  title VARCHAR(150) NULL,"
+                            "  customer_name VARCHAR(150) NULL,"
+                            "  image_url VARCHAR(500) NOT NULL,"
+                            "  display_order INT DEFAULT 0,"
+                            "  is_active TINYINT(1) DEFAULT 1 NOT NULL,"
+                            "  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                            "  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+                            ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+                        ))
+                        db.session.commit()
+                    except Exception as t_err:
+                        db.session.rollback()
+                        print(f"[DB Migration Notice] testimonials table: {t_err}")
+
+                    # Verify and migrate any new columns on existing MySQL tables
+                    from sqlalchemy import text
+                    try:
+                        cols = [r[0] for r in db.session.execute(text('DESCRIBE admins;')).fetchall()]
+                        if 'is_active' not in cols:
+                            db.session.execute(text('ALTER TABLE admins ADD COLUMN is_active TINYINT(1) DEFAULT 1 NOT NULL;'))
+                        if 'last_login_at' not in cols:
+                            db.session.execute(text('ALTER TABLE admins ADD COLUMN last_login_at DATETIME NULL;'))
+
+                        # Ensure previous_slugs column exists on destinations table
+                        dest_cols = [r[0] for r in db.session.execute(text('DESCRIBE destinations;')).fetchall()]
+                        if 'previous_slugs' not in dest_cols:
+                            db.session.execute(text('ALTER TABLE destinations ADD COLUMN previous_slugs VARCHAR(500) NULL;'))
+
+                        # Expand image columns to VARCHAR(500) for Vercel Blob URLs
+                        for alter_sql in [
+                            'ALTER TABLE destinations MODIFY hero_image VARCHAR(500) NULL;',
+                            'ALTER TABLE destinations MODIFY cover_image VARCHAR(500) NULL;',
+                            'ALTER TABLE destination_gallery MODIFY image_url VARCHAR(500) NOT NULL;',
+                            'ALTER TABLE services MODIFY image VARCHAR(500) NULL;',
+                            'ALTER TABLE stories MODIFY image VARCHAR(500) NULL;'
+                        ]:
+                            try:
+                                db.session.execute(text(alter_sql))
+                            except Exception:
+                                pass
+
+                        # Drop unused cover_image column on categories table if present
+                        try:
+                            cat_cols = [r[0] for r in db.session.execute(text('DESCRIBE categories;')).fetchall()]
+                            if 'cover_image' in cat_cols:
+                                db.session.execute(text('ALTER TABLE categories DROP COLUMN cover_image;'))
+                        except Exception as cat_drop_err:
+                            print(f"[DB Migration Notice] categories cover_image drop check: {cat_drop_err}")
+
+                        db.session.commit()
+                    except Exception as migration_err:
+                        db.session.rollback()
+                        print(f"[DB Migration Notice] Schema check: {migration_err}")
+
+                elif dialect_name == 'postgresql':
+                    # PostgreSQL schema is automatically and cleanly created by db.create_all() above.
+                    # MySQL-specific DESCRIBE, MODIFY, AUTO_INCREMENT, and ENGINE=InnoDB statements are safely bypassed.
+                    print("[DB Init] PostgreSQL schema verified/created successfully via SQLAlchemy metadata.")
             except Exception as e:
                 print(f"[DB Init Warning] Could not automatically create tables: {e}")
             

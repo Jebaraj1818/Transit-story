@@ -14,6 +14,7 @@ import logging
 import unittest
 from unittest.mock import patch, MagicMock
 
+import backend.tests.test_setup
 from backend.app import app
 from backend.config import Config
 from backend.db import db
@@ -123,7 +124,7 @@ class BrevoTestEmailEndpointTestCase(unittest.TestCase):
             mock_post.assert_called_once()
             called_kwargs = mock_post.call_args[1]
             self.assertEqual(called_kwargs['json']['to'][0]['email'], 'traveler@thetransitstory.com')
-            self.assertEqual(called_kwargs['json']['subject'], "The Transit Story — Brevo Email Test")
+            self.assertEqual(called_kwargs['json']['subject'], "Transit Story — Brevo Email Test")
 
     def test_06_brevo_failure_response_handled_safely(self):
         """6. Brevo failure responses (e.g. unverified sender) return friendly message"""

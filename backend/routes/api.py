@@ -64,7 +64,7 @@ def get_destinations():
             )
             base_query = base_query.filter(
                 (Destination.category_id == category.id) |
-                (Destination.id.in_(m2m_dest_ids))
+                (Destination.id.in_(m2m_dest_ids.select()))
             )
         elif category_slug == 'college-educational':
             base_query = base_query.filter_by(is_educational=True)
@@ -110,8 +110,8 @@ def get_destination(slug):
             selectinload(Destination.highlights),
             selectinload(Destination.experiences)
         ).filter(
-            (Destination.previous_slugs.like(f"%{clean_slug}%")) |
-            (Destination.previous_slugs.like(f"%{target_slug}%"))
+            (Destination.previous_slugs.ilike(f"%{clean_slug}%")) |
+            (Destination.previous_slugs.ilike(f"%{target_slug}%"))
         ).first()
     
     # 3. Try finding by ID if integer passed

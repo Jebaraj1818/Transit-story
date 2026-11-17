@@ -27,6 +27,7 @@ import json
 import unittest
 from unittest.mock import patch, MagicMock
 
+import backend.tests.test_setup
 from backend.app import app
 from backend.config import Config
 from backend.db import db

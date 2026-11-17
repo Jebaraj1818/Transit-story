@@ -2,6 +2,7 @@ import hashlib
 import json
 import unittest
 from datetime import datetime, timedelta
+import backend.tests.test_setup
 from backend.app import app
 from backend.db import db
 from backend.models import (

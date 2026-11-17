@@ -15,6 +15,7 @@ G. Storage audit endpoint -> verify non-destructive media audit.
 
 import unittest
 from unittest.mock import patch, MagicMock
+import backend.tests.test_setup
 from backend.app import app
 from backend.db import db
 from backend.models import Admin, SiteSetting, Destination, DestinationGallery

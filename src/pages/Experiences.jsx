@@ -228,6 +228,7 @@ export default function Experiences() {
                   >
                     <Link
                       to={`/services/${tour.slug}`}
+                      state={{ from: '/experiences' }}
                       className="group relative aspect-[16/11] sm:aspect-[16/10] overflow-hidden rounded-sm border border-[#E0D8BD] bg-forest/10 block shadow-sm hover:border-earth/50 hover:shadow-xl transition-all duration-500 focus-visible:outline-gold"
                     >
                       <img
@@ -274,7 +275,7 @@ export default function Experiences() {
                     </div>
 
                     <h3 className="font-serif text-3xl sm:text-4xl lg:text-[2.6rem] font-normal text-forest leading-[1.1] tracking-tight group-hover:text-forest-900 transition-colors">
-                      <Link to={`/services/${tour.slug}`} className="hover:text-forest-900 focus-visible:outline-gold">
+                      <Link to={`/services/${tour.slug}`} state={{ from: '/experiences' }} className="hover:text-forest-900 focus-visible:outline-gold">
                         {tour.title}
                       </Link>
                     </h3>
@@ -296,6 +297,7 @@ export default function Experiences() {
                     <div className="pt-3 flex flex-wrap items-center gap-5 sm:gap-6">
                       <Link
                         to={`/services/${tour.slug}`}
+                        state={{ from: '/experiences' }}
                         className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-kicker text-forest hover:text-earth transition-colors focus-visible:outline-gold group"
                       >
                         <span className="pb-0.5 border-b border-forest/40 group-hover:border-earth">

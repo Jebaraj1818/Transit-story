@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" sizes="32x32" href="/logo/favicon-32x32.png" />
@@ -11,6 +11,10 @@
     <title>Transit Story — Curated Journeys | Travel, Culture, Stories</title>
     <meta name="description" content="Crafted experiences and meaningful journeys across Tamil Nadu and beyond. Connect with people, culture, knowledge, and local communities." />
     
+    <!-- High Priority Preload for Initial LCP Hero Image -->
+    <link rel="preload" as="image" href="/images/hero/hero01-mobile.webp" type="image/webp" fetchpriority="high" media="(max-width: 768px)" />
+    <link rel="preload" as="image" href="/images/hero/hero01.webp" type="image/webp" fetchpriority="high" media="(min-width: 769px)" />
+
     <!-- Google Fonts: Cormorant Garamond & DM Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

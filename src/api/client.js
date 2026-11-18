@@ -376,9 +376,9 @@ export const DEFAULT_TESTIMONIALS = [
 let cachedTestimonials = null;
 
 export async function getTestimonials() {
-  if (cachedTestimonials && cachedTestimonials.length > 0) {
+  if (cachedTestimonials !== null) {
     fetchJson(`${API_BASE}/testimonials`).then((data) => {
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         cachedTestimonials = data;
       }
     }).catch(() => {});
@@ -387,12 +387,12 @@ export async function getTestimonials() {
 
   try {
     const data = await fetchJson(`${API_BASE}/testimonials`);
-    if (Array.isArray(data) && data.length > 0) {
+    if (Array.isArray(data)) {
       cachedTestimonials = data;
       return cachedTestimonials;
     }
   } catch (err) {
-    // Graceful fallback
+    // Graceful fallback on network error
   }
   return DEFAULT_TESTIMONIALS;
 }

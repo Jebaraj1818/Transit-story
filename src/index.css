@@ -3,12 +3,28 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --color-forest: #13271F;
+    --color-forest-deep: #13271F;
+    --color-forest-classic: #173A2D;
+    --color-forest-earthy: #263D32;
+    --color-gold: #D6A85F;
+    --color-gold-classic: #C49A45;
+    --color-ivory: #F5F1E8;
+    --color-ivory-sandstone: #F6F1E6;
+    --color-ivory-parchment: #F7F3EA;
+    --color-earth: #426047;
+    --color-charcoal: #20231F;
+    --color-charcoal-muted: #4A4E49;
+    --color-light-primary: #FFFFFF;
+    --color-light-secondary: #E5E2D9;
+  }
+
   *, *::before, *::after {
     box-sizing: border-box;
   }
 
   html {
-    scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -74,6 +90,59 @@
 }
 
 @layer utilities {
+  /* Level 1 — Hero / Display Typography */
+  .type-display {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(2.15rem, 4.5vw + 0.8rem, 4.25rem);
+    font-weight: 400;
+    line-height: 1.06;
+    letter-spacing: -0.02em;
+  }
+
+  /* Level 2 — Main Section Headings */
+  .type-section-heading {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(1.85rem, 3vw + 0.8rem, 3.25rem);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+  }
+
+  /* Level 3 — Destination / Content Headings */
+  .type-destination-heading {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(1.35rem, 2vw + 0.5rem, 1.85rem);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+
+  /* Level 4 — Subheadings */
+  .type-subheading {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(1.15rem, 1.4vw + 0.5rem, 1.45rem);
+    font-weight: 400;
+    line-height: 1.25;
+  }
+
+  /* Level 5 — Body Content */
+  .type-body {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 0.9375rem; /* 15px */
+    font-weight: 400;
+    line-height: 1.65;
+    color: #4A4E49;
+  }
+
+  /* Level 6 — Eyebrow Labels / Metadata */
+  .type-eyebrow {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-size: 0.6875rem; /* 11px */
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
   .editorial-card-border {
     border: 1px solid rgba(229, 222, 201, 0.85);
   }

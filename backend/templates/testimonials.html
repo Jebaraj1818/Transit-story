@@ -75,7 +75,7 @@
                 </td>
                 <td style="text-align: right; white-space: nowrap;">
                   <button type="button" class="btn btn-outline btn-sm"
-                          onclick="openEditTestimonial({{ t.id }}, '{{ t.title|replace('\'', '\\\'') }}', '{{ t.customer_name|replace('\'', '\\\'') }}', '{{ t.image_url|replace('\'', '\\\'') }}', {{ t.display_order }}, {{ 'true' if t.is_active else 'false' }})"
+                          onclick="openEditTestimonial({{ t.id }}, '{{ (t.title or '')|replace('\'', '\\\'') }}', '{{ (t.customer_name or '')|replace('\'', '\\\'') }}', '{{ (t.image_url or '')|replace('\'', '\\\'') }}', {{ t.display_order }}, {{ 'true' if t.is_active else 'false' }})"
                           style="margin-right: 4px;" title="Edit details">
                     ✎ Edit
                   </button>

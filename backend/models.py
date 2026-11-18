@@ -475,3 +475,44 @@ class Testimonial(db.Model):
             'is_active': self.is_active,
             'createdAt': self.created_at.strftime('%Y-%m-%d %H:%M') if self.created_at else None
         }
+
+DEFAULT_TESTIMONIALS_DATA = [
+    {
+        'title': 'Munnar & Kerala Holiday Journey',
+        'customer_name': 'Holiday Traveler',
+        'image_url': '/images/testimonials/testimonial1.jpeg',
+        'display_order': 1,
+        'is_active': True,
+    },
+    {
+        'title': 'South India Heritage Tour',
+        'customer_name': 'Family Travel Group',
+        'image_url': '/images/testimonials/testimonial2.jpeg',
+        'display_order': 2,
+        'is_active': True,
+    },
+]
+
+def ensure_default_testimonials():
+    """
+    Ensure the two existing website testimonials are present in the database.
+    If the testimonials table has 0 records, automatically seeds the two
+    established website testimonials so they are manageable via the Admin Desk.
+    Idempotent: verifies table count before adding to prevent duplicates.
+    """
+    try:
+        if Testimonial.query.count() == 0:
+            for item in DEFAULT_TESTIMONIALS_DATA:
+                t = Testimonial(
+                    title=item['title'],
+                    customer_name=item['customer_name'],
+                    image_url=item['image_url'],
+                    display_order=item['display_order'],
+                    is_active=item['is_active']
+                )
+                db.session.add(t)
+            db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        import logging
+        logging.getLogger('backend').warning(f"Notice during testimonial initialization: {e}")

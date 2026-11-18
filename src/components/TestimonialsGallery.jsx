@@ -26,13 +26,11 @@ export default function TestimonialsGallery() {
     let isMounted = true;
     getTestimonials()
       .then((data) => {
-        if (isMounted && Array.isArray(data) && data.length > 0) {
+        if (isMounted && Array.isArray(data)) {
           const valid = data.filter(
             (t) => t && (t.isActive ?? t.is_active ?? true) && (t.imageUrl || t.image_url)
           );
-          if (valid.length > 0) {
-            setTestimonials(valid);
-          }
+          setTestimonials(valid);
         }
       })
       .catch(() => {})
@@ -183,9 +181,13 @@ export default function TestimonialsGallery() {
     }),
   };
 
+  if (!testimonials || testimonials.length === 0) {
+    return null;
+  }
+
   return (
     <section
-      className="w-full bg-[#F5F0E5] py-14 sm:py-20 lg:py-24 border-b border-[#E3D9C3] relative overflow-hidden"
+      className="w-full bg-[#F5F0E5] py-10 sm:py-14 lg:py-16 border-b border-[#E3D9C3] relative overflow-hidden"
       aria-label="Customer Testimonials"
     >
       {/* Subtle atmospheric ambient glow */}
@@ -214,8 +216,8 @@ export default function TestimonialsGallery() {
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="flex items-center gap-2.5 mb-3 sm:mb-3.5"
             >
-              <span className="w-6 sm:w-8 h-px bg-[#C49A45]" aria-hidden="true" />
-              <span className="text-[10.5px] sm:text-[11.5px] uppercase tracking-[0.24em] font-semibold text-[#C49A45]">
+              <span className="w-6 sm:w-8 h-px bg-[#D6A85F]" aria-hidden="true" />
+              <span className="text-[10.5px] sm:text-[11.5px] uppercase tracking-[0.24em] font-semibold text-[#D6A85F]">
                 REAL TRAVEL EXPERIENCES
               </span>
             </motion.div>
@@ -226,9 +228,9 @@ export default function TestimonialsGallery() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-              className="font-serif text-3xl sm:text-4xl lg:text-[2.85rem] xl:text-[3.25rem] font-normal text-[#173A2D] leading-[1.08] tracking-tight"
+              className="font-serif text-3xl sm:text-4xl lg:text-[2.85rem] xl:text-[3.25rem] font-normal text-[#13271F] leading-[1.08] tracking-tight"
             >
-              Words From The Journey
+              Words <span className="italic font-light text-[#D6A85F]">From The Journey</span>
             </motion.h2>
 
             {/* Subtitle */}
@@ -237,7 +239,7 @@ export default function TestimonialsGallery() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.55, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
-              className="text-base sm:text-lg text-[#3A4038] italic font-normal mt-3 sm:mt-4 leading-relaxed"
+              className="font-serif text-base sm:text-xl text-[#567A5C] italic font-light mt-3 sm:mt-4 leading-relaxed"
             >
               Experiences shared by the people who travelled with us.
             </motion.p>
@@ -248,7 +250,7 @@ export default function TestimonialsGallery() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.55, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="text-xs sm:text-sm text-[#5C635B] font-normal mt-2 leading-relaxed"
+              className="text-xs sm:text-[14px] text-[#4A4E49] font-normal mt-2 leading-relaxed"
             >
               Every journey leaves a story worth sharing. Authentic, unedited messages from our travelers across South India's trails and heritage landscapes.
             </motion.p>

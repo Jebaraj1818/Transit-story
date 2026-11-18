@@ -96,13 +96,13 @@ export default function Contact() {
 
           <motion.div {...fadeIn} className="max-w-3xl">
             {/* Small Eyebrow */}
-            <span className="inline-block text-[11px] sm:text-xs uppercase tracking-[0.25em] text-earth font-medium mb-2.5">
+            <span className="inline-block text-[11px] sm:text-xs uppercase tracking-[0.25em] text-gold font-semibold mb-2.5">
               LET&rsquo;S CONNECT
             </span>
 
             {/* Controlled Editorial Heading: elegant Cormorant Garamond */}
             <h1 className="font-serif text-[2.25rem] sm:text-4xl md:text-5xl lg:text-[3.5rem] font-normal text-forest tracking-tight leading-[1.08] mb-3 sm:mb-4">
-              Begin the Conversation
+              Begin the <span className="italic font-light text-gold">Conversation</span>
             </h1>
 
             {/* Concise Supporting Text */}

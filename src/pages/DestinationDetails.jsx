@@ -24,9 +24,9 @@ export default function DestinationDetails() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Scroll to top upon mounting or when slug changes
-  useEffect(() => {
-    window.scrollTo(0, 0);
+  // Scroll to top immediately upon mounting or when slug changes without vertical animation
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [slug]);
 
   // ── State initialization ────────────────────────────────────────────────────
@@ -112,8 +112,8 @@ export default function DestinationDetails() {
   const backRoute = stateFrom
     ? stateFrom
     : isEducational
-    ? '/services'
-    : '/tours';
+      ? '/services'
+      : '/tours';
 
   // Derive a human-readable back label from the resolved route
   const getBackLabel = () => {
@@ -138,6 +138,14 @@ export default function DestinationDetails() {
     return isEducational ? '← Back to Educational Tours' : '← Back to Tours';
   };
   const backLabel = getBackLabel();
+
+  // Instant back navigation that restores the exact browsing scroll position
+  const handleBackNavigation = (e) => {
+    if (stateFrom || (window.history.state && window.history.state.idx > 0)) {
+      e.preventDefault();
+      navigate(-1);
+    }
+  };
   const ctaButtonText = isEducational ? 'Enquire for This Visit' : 'Plan This Journey';
   const ctaExploreText = isEducational ? 'Explore All Visits' : 'Explore All Tours';
   const encountersEyebrow = isEducational ? 'Academic & Field Focus' : 'Curated Encounters';
@@ -155,12 +163,12 @@ export default function DestinationDetails() {
     destination?.images && destination.images.length > 0
       ? destination.images
       : destination?.gallery && destination.gallery.length > 0
-      ? destination.gallery
-      : destination?.coverImage
-      ? [destination.coverImage]
-      : destination?.image
-      ? [destination.image]
-      : [];
+        ? destination.gallery
+        : destination?.coverImage
+          ? [destination.coverImage]
+          : destination?.image
+            ? [destination.image]
+            : [];
 
   const heroImage = destination?.heroImage || destination?.coverImage || destination?.image || allImages[0];
 
@@ -321,6 +329,7 @@ export default function DestinationDetails() {
         <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pt-5 sm:pt-8 flex items-center justify-between">
           <Link
             to={backRoute}
+            onClick={handleBackNavigation}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/35 backdrop-blur-md border border-ivory/20 text-[11px] font-semibold uppercase tracking-kicker text-ivory hover:text-gold hover:border-gold/40 transition-all duration-200 focus-visible:outline-gold"
           >
             <ArrowLeft className="w-3.5 h-3.5 text-gold flex-shrink-0" />
@@ -335,24 +344,24 @@ export default function DestinationDetails() {
         <div className="relative z-20 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full pb-5 sm:pb-12 md:pb-14">
           <div className="max-w-[340px] sm:max-w-md md:max-w-[540px]">
             {/* Category / Eyebrow */}
-            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-[10.5px] sm:text-xs tracking-expansive uppercase text-gold font-medium mb-2 sm:mb-3.5 drop-shadow-sm">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-[10.5px] sm:text-xs tracking-expansive uppercase text-gold font-semibold mb-2 sm:mb-3.5 drop-shadow-sm">
               <span className="w-6 h-px bg-gold/70 hidden sm:inline-block" aria-hidden="true" />
               <span>{destination.category || 'CULTURAL & HERITAGE'}</span>
               <span className="text-ivory/40">•</span>
-              <span className="text-ivory/80 font-normal flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-gold/80" />
+              <span className="text-white font-medium flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-gold" />
                 {destination.location}
               </span>
             </div>
 
-            {/* Destination Title: Controlled Editorial Scale (52–64px desktop, 44–52px tablet, 32–42px mobile clamp) */}
-            <h1 className="font-serif text-[clamp(1.95rem,5.5vw,2.35rem)] sm:text-[2.75rem] md:text-[3.25rem] lg:text-[3.65rem] font-normal text-ivory leading-[1.08] sm:leading-[1.06] tracking-tight mb-2.5 sm:mb-4 drop-shadow-[0_2px_16px_rgba(0,0,0,0.5)]">
+            {/* Destination Title: Level 1 Hero Display */}
+            <h1 className="font-serif text-[clamp(2.15rem,5.5vw,3.75rem)] font-normal text-white leading-[1.06] tracking-tight mb-2.5 sm:mb-4 drop-shadow-[0_2px_16px_rgba(0,0,0,0.6)]">
               {destination.title}
             </h1>
 
             {/* Very Short Supporting Line */}
             {destination.tag && (
-              <p className="text-[13.5px] sm:text-sm text-ivory/80 font-light tracking-wide max-w-[320px] sm:max-w-md mb-4 sm:mb-6 drop-shadow-[0_1px_6px_rgba(0,0,0,0.4)]">
+              <p className="text-[13.5px] sm:text-base text-[#E5E2D9] font-light tracking-wide max-w-[320px] sm:max-w-md mb-4 sm:mb-6 drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
                 {destination.tag}
               </p>
             )}
@@ -392,6 +401,10 @@ export default function DestinationDetails() {
               {galleryImages.length > 0 && (
                 <a
                   href="#gallery"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
                   className="inline-flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-sm bg-black/30 backdrop-blur-md border border-ivory/25 text-[11px] sm:text-xs font-semibold uppercase tracking-kicker text-ivory hover:text-gold hover:border-gold/50 transition-all"
                 >
                   <span>Gallery</span>
@@ -407,6 +420,7 @@ export default function DestinationDetails() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
         <Link
           to={backRoute}
+          onClick={handleBackNavigation}
           className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs uppercase tracking-[0.14em] font-medium text-earth hover:text-forest transition-colors duration-200 group focus-visible:outline-[#C49A45] min-h-[36px]"
           aria-label={backLabel}
         >
@@ -421,14 +435,16 @@ export default function DestinationDetails() {
       <div className="py-14 sm:py-20 md:py-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <section className="mb-16 sm:mb-20 pb-12 border-b border-[#E0D8BD]">
-            <span className="text-[11px] sm:text-xs uppercase tracking-kicker text-earth font-medium block mb-3">
+            <span className="text-[11px] sm:text-xs uppercase tracking-kicker text-gold font-semibold block mb-3">
               {isEducational ? 'Educational Introduction' : 'Editorial Overview'}
             </span>
-            <h2 className="font-serif text-2xl sm:text-3xl md:text-[2.2rem] font-light text-forest leading-snug tracking-tight mb-6 text-balance">
-              "{destination.description}"
-            </h2>
-            <div className="space-y-4 text-base sm:text-lg text-charcoal-muted leading-relaxed font-normal max-w-3xl">
-              <h3 className="font-serif text-xl sm:text-2xl font-normal text-forest mb-2">
+            <div className="border-l-2 border-gold/70 pl-4 sm:pl-6 my-4">
+              <h2 className="font-serif text-2xl sm:text-3xl md:text-[2.25rem] font-light text-forest leading-snug tracking-tight italic text-balance">
+                &ldquo;{destination.description}&rdquo;
+              </h2>
+            </div>
+            <div className="space-y-4 text-base sm:text-lg text-charcoal-muted leading-relaxed font-normal max-w-3xl mt-6">
+              <h3 className="font-serif text-xl sm:text-2xl font-medium text-forest mb-2">
                 {isEducational ? 'About the Visit' : 'About the Journey'}
               </h3>
               <p>{destination.about || destination.description}</p>
@@ -442,21 +458,21 @@ export default function DestinationDetails() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14">
               {/* Left 7 cols: What You Can Experience */}
               <div className="lg:col-span-7">
-                <span className="text-[11px] uppercase tracking-kicker text-earth font-medium block mb-2">
+                <span className="text-[11px] uppercase tracking-kicker text-gold font-semibold block mb-2">
                   {encountersEyebrow}
                 </span>
-                <h3 className="font-serif text-2xl sm:text-3xl font-normal text-forest leading-tight mb-6">
+                <h3 className="font-serif text-2xl sm:text-3xl font-medium text-forest leading-tight mb-6">
                   {encountersTitle}
                 </h3>
 
                 {destination.experiences && destination.experiences.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="divide-y divide-[#E0D8BD]/60">
                     {destination.experiences.map((exp, idx) => (
                       <div
                         key={idx}
-                        className="p-4 sm:p-5 bg-[#FCFAF5] border border-[#E0D8BD] rounded-sm flex items-start gap-3.5"
+                        className="py-3.5 sm:py-4 flex items-start gap-3.5 group"
                       >
-                        <Sparkles className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C49A45] flex-shrink-0 mt-2" />
                         <span className="text-xs sm:text-sm text-charcoal leading-relaxed font-normal">
                           {exp}
                         </span>
@@ -470,18 +486,18 @@ export default function DestinationDetails() {
                 )}
               </div>
 
-              {/* Right 5 cols: Suggested Highlights & Notes */}
+              {/* Right 5 cols: Suggested Highlights & Notes (Unboxed editorial column) */}
               <div className="lg:col-span-5">
-                <div className="bg-[#FCFAF5] border border-[#E0D8BD] p-6 sm:p-7 rounded-sm">
-                  <span className="text-[11px] uppercase tracking-kicker text-earth font-medium block mb-2">
+                <div className="border-l-2 border-gold/70 pl-6 sm:pl-8 py-1">
+                  <span className="text-[11px] uppercase tracking-kicker text-gold font-semibold block mb-2">
                     {notesEyebrow}
                   </span>
-                  <h3 className="font-serif text-xl sm:text-2xl font-normal text-forest mb-4">
+                  <h3 className="font-serif text-xl sm:text-2xl font-medium text-forest mb-4">
                     {notesTitle}
                   </h3>
 
                   {destination.highlights && destination.highlights.length > 0 ? (
-                    <ul className="space-y-3.5 mb-6 text-xs sm:text-sm text-charcoal-muted">
+                    <ul className="space-y-3 mb-6 text-xs sm:text-sm text-charcoal-muted">
                       {destination.highlights.map((hl, idx) => (
                         <li key={idx} className="flex items-start gap-3">
                           <CheckCircle2 className="w-4 h-4 text-earth flex-shrink-0 mt-0.5" />
@@ -497,7 +513,7 @@ export default function DestinationDetails() {
 
                   {/* Suitable For info */}
                   {destination.suitableFor && (
-                    <div className="pt-4 border-t border-[#E8E1CD] text-xs text-charcoal-light">
+                    <div className="pt-4 border-t border-[#E8E1CD]/70 text-xs text-charcoal-light">
                       <div className="flex items-center gap-1.5 font-medium text-forest mb-1">
                         <Users className="w-3.5 h-3.5 text-earth" />
                         <span>Ideal For</span>
@@ -517,11 +533,11 @@ export default function DestinationDetails() {
             <section id="gallery" className="mb-16 sm:mb-24 scroll-mt-24 border-t border-[#E0D8BD] pt-12 sm:pt-16">
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6 sm:mb-8">
                 <div>
-                  <span className="text-[11px] sm:text-xs uppercase tracking-kicker text-earth font-medium block mb-1.5">
+                  <span className="text-[11px] sm:text-xs uppercase tracking-kicker text-gold font-semibold block mb-1.5">
                     Original Photography
                   </span>
-                  <h2 className="font-serif text-3xl sm:text-4xl font-normal text-forest tracking-tight">
-                    Frames of {destination.title}
+                  <h2 className="font-serif text-3xl sm:text-4xl lg:text-[2.75rem] font-normal text-forest tracking-tight">
+                    Frames of <span className="italic font-light text-gold">{destination.title}</span>
                   </h2>
                 </div>
                 <p className="text-xs uppercase tracking-editorial text-charcoal-light font-medium">
@@ -578,49 +594,37 @@ export default function DestinationDetails() {
                   <span>{bannerEyebrow}</span>
                 </div>
 
-                <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal text-ivory tracking-tight leading-[1.08] mb-4">
-                  Make This Journey Yours
+                <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal text-white tracking-tight leading-[1.08] mb-4">
+                  Make This Journey <span className="italic font-light text-gold">Yours</span>
                 </h2>
 
-                <p className="text-sm sm:text-base text-ivory/80 leading-relaxed font-normal mb-8 max-w-xl mx-auto">
+                <p className="text-sm sm:text-base text-[#E5E2D9]/85 leading-relaxed font-normal mb-8 max-w-xl mx-auto">
                   {bottomDesc}
                 </p>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <Button
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 pt-2">
+                  <Link
                     to={`/plan-your-journey?destination=${encodeURIComponent(destination.slug)}`}
                     state={{
                       destination: destination.title,
                       category: destination.category || 'Custom Journey'
                     }}
-                    variant="primary"
-                    size="lg"
-                    className="w-full sm:w-auto tracking-widest bg-gold hover:bg-gold-dark text-forest-950 font-semibold py-3.5 px-8 text-xs uppercase"
+                    className="group inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full bg-gold hover:bg-gold-light text-forest text-xs font-semibold uppercase tracking-widest transition-all duration-300 shadow-sm active:scale-[0.98] select-none"
                   >
-                    <span>PLAN THIS JOURNEY &rarr;</span>
-                  </Button>
-                  {isEducational && (
-                    <Button
-                      to={`/plan-your-journey?destination=${encodeURIComponent(destination.slug)}`}
-                      state={{
-                        destination: destination.title,
-                        category: destination.category || 'Educational Visit'
-                      }}
-                      variant="outline"
-                      size="lg"
-                      className="w-full sm:w-auto tracking-widest border-ivory/40 text-ivory hover:bg-white/10 py-3.5 px-7 text-xs uppercase"
-                    >
-                      <span>ENQUIRE FOR THIS VISIT &rarr;</span>
-                    </Button>
-                  )}
-                  <Button
+                    <span>{ctaButtonText}</span>
+                    <ArrowRight className="w-4 h-4 text-forest transition-transform duration-300 group-hover:translate-x-1" />
+                  </Link>
+
+                  <Link
                     to={backRoute}
-                    variant="outline"
-                    size="lg"
-                    className="w-full sm:w-auto tracking-widest border-ivory/20 text-ivory/80 hover:text-ivory hover:bg-white/5 py-3.5 px-6 text-xs uppercase"
+                    onClick={handleBackNavigation}
+                    className="group inline-flex items-center gap-2 text-xs uppercase tracking-widest font-medium text-[#E5E2D9]/85 hover:text-gold py-2 px-2 transition-colors select-none"
                   >
-                    {ctaExploreText}
-                  </Button>
+                    <span className="border-b border-[#E5E2D9]/30 group-hover:border-gold pb-0.5 transition-colors">
+                      {ctaExploreText}
+                    </span>
+                    <ArrowRight className="w-3.5 h-3.5 text-gold transition-transform duration-300 group-hover:translate-x-1" />
+                  </Link>
                 </div>
               </div>
             </div>
@@ -712,11 +716,10 @@ export default function DestinationDetails() {
                     key={i}
                     type="button"
                     onClick={() => setActivePhotoIndex(i)}
-                    className={`w-14 h-10 sm:w-16 sm:h-12 rounded-sm overflow-hidden border transition-all ${
-                      activePhotoIndex === i
-                        ? 'border-gold scale-105 shadow-md'
-                        : 'border-ivory/30 opacity-60 hover:opacity-100'
-                    }`}
+                    className={`w-14 h-10 sm:w-16 sm:h-12 rounded-sm overflow-hidden border transition-all ${activePhotoIndex === i
+                      ? 'border-gold scale-105 shadow-md'
+                      : 'border-ivory/30 opacity-60 hover:opacity-100'
+                      }`}
                   >
                     <img
                       src={src}

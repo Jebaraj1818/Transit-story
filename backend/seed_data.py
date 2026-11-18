@@ -15,7 +15,7 @@ from backend.db import db
 from backend.models import (
     Admin, Category, Destination, DestinationGallery,
     DestinationHighlight, DestinationExperience, Service,
-    FAQ, JourneyIdea, SiteSetting, Story
+    FAQ, JourneyIdea, SiteSetting, Story, Testimonial, ensure_default_testimonials
 )
 
 app = create_app()
@@ -675,6 +675,12 @@ def seed_database():
             if not setting:
                 db.session.add(SiteSetting(setting_key=key, setting_value=val))
                 print(f"[SEED] Set setting: {key}")
+
+        # ----------------------------------------------------------------------
+        # 9. Customer Testimonials (WhatsApp review screenshots)
+        # ----------------------------------------------------------------------
+        ensure_default_testimonials()
+        print("[SEED] Ensured default customer testimonials.")
 
         db.session.commit()
         print("[SEED COMPLETED] Database populated successfully with all existing verified assets and models.")

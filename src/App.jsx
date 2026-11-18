@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, useLocation, Navigate, useParams } from 'react-router-dom';
+import React, { useEffect, useLayoutEffect } from 'react';
+import { Routes, Route, useLocation, useNavigationType, Navigate, useParams } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import FloatingActions from './components/FloatingActions';
@@ -21,15 +21,69 @@ import FAQ from './pages/FAQ';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 
-/**
- * ScrollToTop utility ensuring route changes scroll to the top of the viewport
- */
-function ScrollToTop() {
-  const { pathname } = useLocation();
+const scrollPositions = new Map();
 
+/**
+ * ScrollRestorationHandler:
+ * - Instantly resets scroll to top (0, 0) upon forward navigation (PUSH/REPLACE).
+ * - Immediately restores previous browsing position upon Back/Forward navigation (POP).
+ * - Eliminates unwanted smooth scrolling or vertical sliding during page transitions.
+ */
+function ScrollRestorationHandler() {
+  const location = useLocation();
+  const navType = useNavigationType();
+
+  // Disable browser's automatic scroll restoration to avoid race conditions with React rendering
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
+  // Continuously record scroll position while the user scrolls
+  useEffect(() => {
+    const handleScroll = () => {
+      const y = window.scrollY;
+      scrollPositions.set(location.key, y);
+      scrollPositions.set(location.pathname + location.search, y);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [location.key, location.pathname, location.search]);
+
+  // Synchronously save scroll before leaving, and restore or reset scroll before paint
+  useLayoutEffect(() => {
+    if (navType === 'POP') {
+      const savedY =
+        scrollPositions.get(location.key) ??
+        scrollPositions.get(location.pathname + location.search);
+
+      if (typeof savedY === 'number') {
+        window.scrollTo({ top: savedY, left: 0, behavior: 'instant' });
+        // Secondary check in case dynamic content/layout expands on next frame
+        const raf = requestAnimationFrame(() => {
+          window.scrollTo({ top: savedY, left: 0, behavior: 'instant' });
+        });
+        return () => {
+          cancelAnimationFrame(raf);
+          scrollPositions.set(location.key, window.scrollY);
+          scrollPositions.set(location.pathname + location.search, window.scrollY);
+        };
+      }
+    } else {
+      // PUSH or REPLACE: new destination or page begins at top immediately
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+
+    return () => {
+      // Runs synchronously before the next route's layout effect resets scroll
+      scrollPositions.set(location.key, window.scrollY);
+      scrollPositions.set(location.pathname + location.search, window.scrollY);
+    };
+  }, [location.pathname, location.search, location.key, navType]);
 
   return null;
 }
@@ -37,7 +91,7 @@ function ScrollToTop() {
 export default function App() {
   return (
     <div className="flex flex-col min-h-screen bg-ivory text-charcoal font-sans">
-      <ScrollToTop />
+      <ScrollRestorationHandler />
       <Navbar />
       <main className="flex-grow">
         <Routes>

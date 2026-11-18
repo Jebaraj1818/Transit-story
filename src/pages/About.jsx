@@ -38,14 +38,14 @@ export default function About() {
             className="max-w-3xl"
           >
             {/* Small Eyebrow */}
-            <span className="inline-block text-[11px] sm:text-xs uppercase tracking-[0.25em] text-earth font-medium mb-3">
+            <span className="inline-block text-[11px] sm:text-xs uppercase tracking-[0.25em] text-gold font-semibold mb-3">
               OUR ETHOS &amp; ORIGIN
             </span>
 
             {/* Controlled Editorial Heading: 40-48px on mobile, controlled on desktop */}
             <h1 className="font-serif text-[2.5rem] sm:text-5xl md:text-[3.5rem] lg:text-[4rem] font-normal text-forest tracking-tight leading-[1.08] mb-3 sm:mb-4">
               The Story Behind <br className="hidden sm:inline" />
-              <span className="italic font-light">The Transit</span>
+              <span className="italic font-light text-gold">The Transit</span>
             </h1>
 
             {/* Short Subtitle */}
@@ -117,11 +117,11 @@ export default function About() {
         {/* ========================================================================= */}
         <section className="pt-10 sm:pt-14 border-t border-[#E3DCBF] mb-14 sm:mb-20">
           <div className="max-w-3xl mb-8 sm:mb-12">
-            <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] text-earth font-medium block mb-2">
+            <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] text-gold font-semibold block mb-2">
               OUR ETHOS
             </span>
             <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-normal text-forest tracking-tight">
-              How We Think About Travel
+              How We Think About <span className="italic font-light text-gold">Travel</span>
             </h2>
           </div>
 
@@ -132,7 +132,7 @@ export default function About() {
               <span className="font-mono text-xs sm:text-sm text-gold font-semibold tracking-wider block mb-2">
                 01
               </span>
-              <h3 className="font-serif text-xl sm:text-2xl text-forest font-normal tracking-tight mb-3">
+              <h3 className="font-serif text-xl sm:text-2xl text-forest font-medium tracking-tight mb-3">
                 Rooted in Authenticity
               </h3>
               <p className="text-sm sm:text-[15px] text-charcoal-muted leading-relaxed max-w-md">
@@ -145,7 +145,7 @@ export default function About() {
               <span className="font-mono text-xs sm:text-sm text-gold font-semibold tracking-wider block mb-2">
                 02
               </span>
-              <h3 className="font-serif text-xl sm:text-2xl text-forest font-normal tracking-tight mb-3">
+              <h3 className="font-serif text-xl sm:text-2xl text-forest font-medium tracking-tight mb-3">
                 Economic Co-growth
               </h3>
               <p className="text-sm sm:text-[15px] text-charcoal-muted leading-relaxed max-w-md">

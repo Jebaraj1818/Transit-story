@@ -2,17 +2,36 @@ import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 
 /**
+ * Helper to render editorial title with selective accent emphasis
+ * Syntax: "Words *in asterisks* become gold italic accent"
+ */
+function renderEditorialTitle(title, accentClass = 'italic font-light text-[#D6A85F]') {
+  if (!title || typeof title !== 'string') return title;
+  if (!title.includes('*')) return title;
+  const parts = title.split(/\*([^*]+)\*/g);
+  return parts.map((part, i) =>
+    i % 2 === 1 ? (
+      <span key={i} className={accentClass}>
+        {part}
+      </span>
+    ) : (
+      part
+    )
+  );
+}
+
+/**
  * Premium Editorial Section Heading Component
  *
- * Spacing calibrated for balanced, compact, breathable editorial rhythm:
- * - Eyebrow to title: 8-12px
- * - Title to description: 12-16px
- * - Description to action: 16-24px
- * - Entire heading block to section content: 32-40px (mb-8 sm:mb-10)
+ * 6-Level Typography System:
+ * - Level 2: Main Section Heading (Cormorant Garamond, responsive clamp, 1.08-1.12 line-height)
+ * - Level 4: Editorial Subtitle (Cormorant Garamond italic, earth-green / gold tone)
+ * - Level 5: Body Description (DM Sans, 14-16px, comfortable leading, muted charcoal)
+ * - Level 6: Eyebrow / Kicker (DM Sans, 10.5-12px, uppercase, 0.24em tracking)
  *
  * Variants:
  *  - 'editorial-left' (Variant A): Eyebrow with decorative thin rule, large heading, description underneath.
- *  - 'centered' (Variant B): Eyebrow with decorative rule, centered heading, description centered underneath.
+ *  - 'centered' (Variant B): Eyebrow with dual rules, centered heading, subtitle, description centered underneath.
  *  - 'split-editorial' (Variant C): Eyebrow, heading on one side, description and extra details beside or underneath.
  *  - 'oversized-display' (Variant D): High-impact large display typography, micro-label, action link.
  */
@@ -30,11 +49,13 @@ export default function SectionHeading({
 
   const isDark = theme === 'dark';
 
-  // Typography and color tokens based on theme (Strict 5-Color Palette)
-  const textColor = isDark ? 'text-[#F5F0E5]' : 'text-[#173A2D]';
-  const descColor = isDark ? 'text-[#F5F0E5]/80' : 'text-[#4A4E49]';
-  const eyebrowColor = isDark ? 'text-[#C49A45]' : 'text-[#426047]';
-  const ruleColor = isDark ? 'bg-[#C49A45]/40' : 'bg-[#426047]/40';
+  // Typography and color tokens based on theme (Refined Editorial Palette)
+  // Deep Forest: #13271F | Antique Gold: #D6A85F | Warm Ivory: #F5F1E8 | Earthy Green: #263D32 / #426047
+  const textColor = isDark ? 'text-[#F5F1E8]' : 'text-[#13271F]';
+  const descColor = isDark ? 'text-[#E5E2D9]/85' : 'text-[#4A4E49]';
+  const eyebrowColor = isDark ? 'text-[#D6A85F]' : 'text-[#426047]';
+  const ruleColor = isDark ? 'bg-[#D6A85F]/50' : 'bg-[#D6A85F]/60';
+  const accentClass = isDark ? 'italic font-light text-[#D6A85F]' : 'italic font-light text-[#D6A85F]';
 
   // Framer Motion reveal variants
   const containerVariants = {
@@ -49,17 +70,17 @@ export default function SectionHeading({
   };
 
   const eyebrowVariants = {
-    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 10, letterSpacing: '0.3em' },
+    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 10, letterSpacing: '0.28em' },
     visible: {
       opacity: 1,
       y: 0,
-      letterSpacing: '0.25em',
+      letterSpacing: '0.24em',
       transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] },
     },
   };
 
   const titleVariants = {
-    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 18 },
+    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 16 },
     visible: {
       opacity: 1,
       y: 0,
@@ -89,37 +110,39 @@ export default function SectionHeading({
         className={`max-w-3xl mx-auto text-center ${className}`}
       >
         {/* Eyebrow with subtle editorial details */}
-        <motion.div variants={eyebrowVariants} className="flex items-center justify-center gap-2.5 sm:gap-3 mb-3 sm:mb-3.5">
-          <span className={`w-6 sm:w-8 h-px ${ruleColor}`} aria-hidden="true" />
-          <span className={`text-[10px] sm:text-[11.5px] uppercase font-medium tracking-[0.22em] ${eyebrowColor}`}>
-            {eyebrow}
-          </span>
-          <span className={`w-6 sm:w-8 h-px ${ruleColor}`} aria-hidden="true" />
-        </motion.div>
+        {eyebrow && (
+          <motion.div variants={eyebrowVariants} className="flex items-center justify-center gap-2.5 sm:gap-3 mb-2.5 sm:mb-3">
+            <span className={`w-6 sm:w-8 h-px ${ruleColor}`} aria-hidden="true" />
+            <span className={`text-[10px] sm:text-[11.5px] uppercase font-semibold tracking-[0.24em] ${eyebrowColor}`}>
+              {eyebrow}
+            </span>
+            <span className={`w-6 sm:w-8 h-px ${ruleColor}`} aria-hidden="true" />
+          </motion.div>
+        )}
 
-        {/* Main Editorial Title: 100% Visual Importance (52-64px desktop, 44-52px tablet, 32-38px mobile, 400 weight) */}
+        {/* Main Editorial Title: Level 2 Typography with clamp() */}
         <motion.h2
           variants={titleVariants}
-          className={`font-serif text-[1.85rem] sm:text-4xl lg:text-[3.5rem] xl:text-[3.75rem] font-normal ${textColor} tracking-tight leading-[1.08] sm:leading-[1.0] mb-2 sm:mb-2.5`}
+          className={`font-serif text-[clamp(1.95rem,3.2vw+0.8rem,3.4rem)] font-normal ${textColor} tracking-tight leading-[1.08] sm:leading-[1.04] mb-2 sm:mb-2.5 text-balance`}
         >
-          {title}
+          {renderEditorialTitle(title, accentClass)}
         </motion.h2>
 
-        {/* Secondary Editorial Subtitle: 55-65% Visual Importance (Italic serif, refined earth-green / gold accent) */}
+        {/* Secondary Editorial Subtitle: Level 4 Typography (Italic serif, refined earth-green / gold accent) */}
         {subtitle && (
           <motion.p
             variants={titleVariants}
-            className="font-serif italic font-light text-base sm:text-xl lg:text-[1.4rem] text-[#567A5C] leading-snug tracking-normal mb-3 sm:mb-4"
+            className="font-serif italic font-light text-base sm:text-xl lg:text-[1.35rem] text-[#567A5C] leading-snug tracking-normal mb-3 sm:mb-3.5"
           >
             {subtitle}
           </motion.p>
         )}
 
-        {/* Supporting Description: 35-40% Visual Importance (Understated neutral, 600-700px max width) */}
+        {/* Supporting Description: Level 5 Typography */}
         {description && (
           <motion.p
             variants={descVariants}
-            className={`text-xs sm:text-[0.925rem] ${descColor} leading-relaxed font-normal max-w-[660px] mx-auto text-center`}
+            className={`text-xs sm:text-[0.9375rem] ${descColor} leading-relaxed font-normal max-w-[660px] mx-auto text-center`}
           >
             {description}
           </motion.p>
@@ -141,21 +164,23 @@ export default function SectionHeading({
         className={`space-y-3.5 ${className}`}
       >
         {/* Eyebrow */}
-        <motion.div variants={eyebrowVariants} className="flex items-center gap-2.5">
-          <span className={`text-[10.5px] sm:text-xs uppercase font-medium tracking-kicker ${eyebrowColor}`}>
-            {eyebrow}
-          </span>
-          <span className={`w-6 h-px ${ruleColor}`} aria-hidden="true" />
-        </motion.div>
+        {eyebrow && (
+          <motion.div variants={eyebrowVariants} className="flex items-center gap-2.5">
+            <span className={`text-[10.5px] sm:text-xs uppercase font-semibold tracking-[0.24em] ${eyebrowColor}`}>
+              {eyebrow}
+            </span>
+            <span className={`w-6 h-px ${ruleColor}`} aria-hidden="true" />
+          </motion.div>
+        )}
 
         {/* Split Editorial Headline */}
         <motion.h2
           variants={titleVariants}
-          className={`font-serif text-2xl sm:text-3xl lg:text-5xl font-normal ${textColor} leading-[1.12] sm:leading-[1.1] tracking-tight`}
+          className={`font-serif text-2xl sm:text-3xl lg:text-[2.85rem] font-normal ${textColor} leading-[1.1] sm:leading-[1.06] tracking-tight`}
         >
-          {title}
+          {renderEditorialTitle(title, accentClass)}
           {subtitle && (
-            <span className="block mt-1 italic font-light text-[#C49A45] text-xl sm:text-3xl lg:text-4xl">
+            <span className="block mt-1 italic font-light text-[#D6A85F] text-xl sm:text-2xl lg:text-3xl">
               {subtitle}
             </span>
           )}
@@ -170,7 +195,7 @@ export default function SectionHeading({
           className={`h-px ${ruleColor} origin-left w-16 sm:w-20 my-2`}
         />
 
-        {/* Description */}
+        {/* Description: Level 5 Typography */}
         {description && (
           <motion.p
             variants={descVariants}
@@ -197,21 +222,23 @@ export default function SectionHeading({
       >
         <div className="max-w-2xl">
           {/* Eyebrow */}
-          <motion.div variants={eyebrowVariants} className="flex items-center gap-2 mb-2.5 sm:mb-3.5">
-            <span className={`text-[10.5px] sm:text-xs uppercase font-medium tracking-kicker ${eyebrowColor}`}>
-              {eyebrow}
-            </span>
-            <span className={`w-6 h-px ${ruleColor}`} aria-hidden="true" />
-          </motion.div>
+          {eyebrow && (
+            <motion.div variants={eyebrowVariants} className="flex items-center gap-2 mb-2 sm:mb-3">
+              <span className={`text-[10.5px] sm:text-xs uppercase font-semibold tracking-[0.24em] ${eyebrowColor}`}>
+                {eyebrow}
+              </span>
+              <span className={`w-6 h-px ${ruleColor}`} aria-hidden="true" />
+            </motion.div>
+          )}
 
-          {/* Oversized Title */}
+          {/* Oversized Title: Level 1-2 Display scale */}
           <motion.h2
             variants={titleVariants}
-            className={`font-serif text-2xl sm:text-4xl md:text-5xl font-normal ${textColor} tracking-tight leading-[1.12] sm:leading-[1.08]`}
+            className={`font-serif text-[clamp(2rem,3.6vw+0.6rem,3.65rem)] font-normal ${textColor} tracking-tight leading-[1.08] sm:leading-[1.04]`}
           >
-            {title}
+            {renderEditorialTitle(title, accentClass)}
             {subtitle && (
-              <span className="block italic text-[#C49A45] text-lg sm:text-2xl md:text-3xl mt-1">
+              <span className="block italic text-[#D6A85F] font-light text-lg sm:text-2xl md:text-[1.65rem] mt-1.5">
                 {subtitle}
               </span>
             )}
@@ -221,7 +248,7 @@ export default function SectionHeading({
           {description && (
             <motion.p
               variants={descVariants}
-              className={`mt-2.5 sm:mt-4 text-xs sm:text-base ${descColor} leading-relaxed font-normal`}
+              className={`mt-2.5 sm:mt-3.5 text-xs sm:text-[0.9375rem] ${descColor} leading-relaxed font-normal max-w-xl`}
             >
               {description}
             </motion.p>
@@ -251,31 +278,33 @@ export default function SectionHeading({
     >
       <div className="max-w-2xl">
         {/* Eyebrow + Rule */}
-        <motion.div variants={eyebrowVariants} className="flex items-center gap-2 mb-2.5 sm:mb-3.5">
-          <span className={`text-[10.5px] sm:text-xs uppercase font-medium tracking-kicker ${eyebrowColor}`}>
-            {eyebrow}
-          </span>
-          <span className={`w-6 h-px ${ruleColor}`} aria-hidden="true" />
-        </motion.div>
+        {eyebrow && (
+          <motion.div variants={eyebrowVariants} className="flex items-center gap-2 mb-2 sm:mb-3">
+            <span className={`text-[10.5px] sm:text-xs uppercase font-semibold tracking-[0.24em] ${eyebrowColor}`}>
+              {eyebrow}
+            </span>
+            <span className={`w-6 h-px ${ruleColor}`} aria-hidden="true" />
+          </motion.div>
+        )}
 
-        {/* Main Editorial Title */}
+        {/* Main Editorial Title: Level 2 Typography with clamp() */}
         <motion.h2
           variants={titleVariants}
-          className={`font-serif text-2xl sm:text-3xl md:text-[2.75rem] font-normal ${textColor} tracking-tight leading-[1.14] sm:leading-[1.12]`}
+          className={`font-serif text-[clamp(1.85rem,3vw+0.6rem,2.85rem)] font-normal ${textColor} tracking-tight leading-[1.12] sm:leading-[1.08]`}
         >
-          {title}
+          {renderEditorialTitle(title, accentClass)}
           {subtitle && (
-            <span className="block mt-1 italic font-light opacity-95">
+            <span className="block mt-1 italic font-light text-[#567A5C] text-lg sm:text-xl">
               {subtitle}
             </span>
           )}
         </motion.h2>
 
-        {/* Description */}
+        {/* Description: Level 5 Typography */}
         {description && (
           <motion.p
             variants={descVariants}
-            className={`mt-3.5 sm:mt-4 text-sm sm:text-base ${descColor} leading-relaxed font-normal`}
+            className={`mt-3 sm:mt-3.5 text-xs sm:text-[0.9375rem] ${descColor} leading-relaxed font-normal max-w-xl`}
           >
             {description}
           </motion.p>

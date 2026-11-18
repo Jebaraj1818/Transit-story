@@ -24,6 +24,8 @@ export const SERVICES_DATA = [
       'Houseboat and coastal stay arrangements'
     ],
     image: '/images/services/hotel-booking.jpg',
+    imageWebp: '/images/services/hotel-booking.webp',
+    imageMobile: '/images/services/hotel-booking-mobile.webp',
     isEducational: false,
   },
   {
@@ -38,6 +40,8 @@ export const SERVICES_DATA = [
       'Intercity transfers and station pick-up coordination'
     ],
     image: '/images/services/transportation.jpg',
+    imageWebp: '/images/services/transportation.webp',
+    imageMobile: '/images/services/transportation-mobile.webp',
     isEducational: false,
   },
   {
@@ -52,6 +56,8 @@ export const SERVICES_DATA = [
       'Temple visit hours and local access planning'
     ],
     image: '/images/services/tour-planning.jpg',
+    imageWebp: '/images/services/tour-planning.webp',
+    imageMobile: '/images/services/tour-planning-mobile.webp',
     isEducational: false,
   },
   {

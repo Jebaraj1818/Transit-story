@@ -89,12 +89,16 @@ export default function Services() {
               >
                 {/* Visual Media Frame — Clean, natural, no number badges, no dark overlays */}
                 <div className="relative aspect-[16/10] overflow-hidden bg-forest/5">
-                  <img
-                    src={service.image}
-                    alt={service.title}
-                    loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                  />
+                  <picture className="w-full h-full block">
+                    <source srcSet={service.imageMobile || service.imageWebp || service.image} type="image/webp" />
+                    <img
+                      src={service.image}
+                      alt={service.title}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                    />
+                  </picture>
                 </div>
 
                 {/* Card Content Hierarchy */}

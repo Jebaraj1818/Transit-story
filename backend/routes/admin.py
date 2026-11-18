@@ -12,7 +12,7 @@ from backend.models import (
     Admin, AdminPasswordResetToken, Category, Destination, DestinationGallery,
     DestinationHighlight, DestinationExperience, Service,
     Enquiry, FAQ, JourneyIdea, SiteSetting, Story, NewsletterSubscriber, EmailLog,
-    destination_categories, Testimonial
+    destination_categories, Testimonial, ensure_default_testimonials
 )
 from backend.routes.auth import login_required, super_admin_required, get_current_admin
 from backend.services.email_service import (
@@ -172,6 +172,7 @@ def reset_password(token):
 @admin_bp.route('/dashboard')
 @login_required
 def dashboard():
+    ensure_default_testimonials()
     try:
         # Consolidate stat counters into a single SQL query using scalar subqueries
         stats_row = db.session.query(
@@ -956,6 +957,7 @@ def delete_story(story_id):
 @admin_bp.route('/testimonials', methods=['GET', 'POST'])
 @login_required
 def testimonials():
+    ensure_default_testimonials()
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         customer_name = request.form.get('customer_name', '').strip()

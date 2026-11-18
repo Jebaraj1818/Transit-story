@@ -119,9 +119,10 @@ export default function Tours() {
           </div>
 
           <div className="max-w-3xl">
-            {/* Clean Dominant Main Heading */}
-            <h1 className="font-serif text-[2.25rem] sm:text-4xl md:text-5xl lg:text-[3.5rem] font-normal text-forest tracking-tight leading-[1.08] mb-2 sm:mb-3">
-              ALL TOURS
+            {/* Clean Dominant Main Heading: Level 2 Editorial Headline */}
+            <h1 className="font-serif text-[clamp(2.25rem,4vw+1rem,3.75rem)] font-normal text-forest tracking-tight leading-[1.08] mb-2 sm:mb-3">
+              <span>All Tours &amp; </span>
+              <span className="italic font-light text-gold">Journeys</span>
             </h1>
 
             {/* Editorial Supporting Description */}
@@ -139,7 +140,7 @@ export default function Tours() {
               Filter By Travel Theme
             </div>
 
-            {/* Mobile horizontal scrolling container, single row on desktop */}
+            {/* Category Navigation Pills (Clean editorial styling) */}
             <div className="flex items-center gap-2 sm:gap-2.5 overflow-x-auto no-scrollbar py-1 -mx-4 px-4 sm:mx-0 sm:px-0 lg:flex-nowrap flex-wrap">
               {categories.map((cat) => {
                 const catId = cat.slug || cat.id;
@@ -150,10 +151,10 @@ export default function Tours() {
                     key={catId}
                     type="button"
                     onClick={() => handleCategoryChange(catId)}
-                    className={`inline-flex items-center whitespace-nowrap text-[11px] sm:text-xs uppercase tracking-wider px-3.5 sm:px-4 py-2 rounded-sm transition-all duration-200 font-medium min-h-[42px] sm:min-h-[38px] touch-manipulation focus-visible:outline-[#C49A45] ${
+                    className={`inline-flex items-center whitespace-nowrap text-[11px] sm:text-xs uppercase tracking-wider px-4 py-2 rounded-full transition-all duration-200 font-medium min-h-[38px] touch-manipulation focus-visible:outline-[#C49A45] ${
                       isActive
-                        ? 'bg-forest text-ivory shadow-sm border border-forest'
-                        : 'bg-white/80 text-charcoal-muted hover:text-forest hover:bg-white border border-[#E0D7BD] hover:border-forest/40'
+                        ? 'bg-forest text-ivory shadow-sm'
+                        : 'bg-transparent text-charcoal-muted hover:text-forest border border-[#E0D8BD]/80 hover:border-forest/40'
                     }`}
                     aria-pressed={isActive}
                   >
@@ -254,13 +255,13 @@ export default function Tours() {
                 return (
                   <article
                     key={tour.id || tour.slug}
-                    className="group flex flex-col bg-white/70 hover:bg-white border border-[#E3DCBF] hover:border-forest/35 rounded-sm overflow-hidden transition-all duration-300 shadow-sm hover:shadow-[0_6px_20px_rgba(23,58,45,0.06)]"
+                    className="group flex flex-col bg-transparent overflow-hidden transition-all duration-300"
                   >
                     {/* Visual Card Media */}
                     <Link
                       to={destinationUrl}
                       state={{ from: toursFrom }}
-                      className="relative block aspect-[16/10] sm:aspect-[4/3] overflow-hidden bg-forest/10 focus-visible:outline-gold"
+                      className="relative block aspect-[16/10] sm:aspect-[4/3] overflow-hidden rounded-sm bg-forest/10 focus-visible:outline-gold shadow-sm"
                       tabIndex={-1}
                       aria-hidden="true"
                     >
@@ -271,53 +272,55 @@ export default function Tours() {
                         style={{ objectPosition: tour.heroPosition || 'center' }}
                         className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent opacity-80 group-hover:opacity-60 transition-opacity duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity duration-300" />
 
                       {/* Category Badge */}
                       <div className="absolute top-3 left-3">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-sm text-[10px] sm:text-[11px] uppercase tracking-wider font-medium bg-forest-900/90 text-ivory backdrop-blur-sm border border-ivory/15 shadow-sm">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-sm text-[10px] sm:text-[10.5px] uppercase tracking-wider font-semibold bg-forest-950/90 text-ivory backdrop-blur-md border border-gold/30 shadow-sm">
                           {categoryBadge}
                         </span>
                       </div>
 
                       {/* Quick Location Badge */}
                       {tour.location && (
-                        <div className="absolute bottom-3 left-3 right-3 flex items-center gap-1.5 text-ivory/90 text-xs font-medium drop-shadow-sm">
+                        <div className="absolute bottom-3 left-3 right-3 flex items-center gap-1.5 text-white text-xs font-medium drop-shadow-sm">
                           <MapPin className="w-3.5 h-3.5 text-gold flex-shrink-0" />
                           <span className="truncate">{tour.location}</span>
                         </div>
                       )}
                     </Link>
 
-                    {/* Card Content Block */}
-                    <div className="p-4 sm:p-4.5 flex flex-col flex-grow">
-                      {/* Destination Name */}
-                      <h2 className="font-serif text-[1.3rem] sm:text-[1.45rem] font-normal text-forest tracking-tight group-hover:text-forest-800 transition-colors leading-snug">
+                    {/* Content Block: Direct typography directly on page canvas */}
+                    <div className="pt-4 pb-2 flex flex-col flex-grow">
+                      {/* Destination Name: Level 3 Prominent Destination Heading */}
+                      <h2 className="font-serif text-xl sm:text-2xl lg:text-[1.65rem] font-medium text-forest tracking-tight group-hover:text-forest-900 transition-colors leading-snug">
                         <Link
                           to={destinationUrl}
                           state={{ from: toursFrom }}
-                          className="focus-visible:outline-[#C49A45] hover:underline hover:decoration-earth/50"
+                          className="focus-visible:outline-gold hover:underline hover:decoration-earth/50"
                         >
                           {title}
                         </Link>
                       </h2>
 
-                      {/* Short Description */}
+                      {/* Short Description: Level 5 Body */}
                       {description && (
-                        <p className="text-xs sm:text-[13px] text-charcoal-muted line-clamp-2 leading-relaxed mt-2 flex-grow">
+                        <p className="text-xs sm:text-[13.5px] text-charcoal-muted line-clamp-2 leading-relaxed mt-2 flex-grow font-normal">
                           {description}
                         </p>
                       )}
 
                       {/* Action / Click Indication */}
-                      <div className="pt-3.5 mt-3.5 border-t border-[#E8E1CD]/70 flex items-center justify-between">
+                      <div className="pt-3 mt-3.5 border-t border-[#E0D8BD]/70 flex items-center justify-between">
                         <Link
                           to={destinationUrl}
                           state={{ from: toursFrom }}
-                          className="text-[11px] sm:text-xs uppercase tracking-editorial font-medium text-forest group-hover:text-gold flex items-center gap-1.5 transition-colors focus-visible:outline-[#C49A45] min-h-[34px]"
+                          className="text-[11px] sm:text-xs uppercase tracking-editorial font-semibold text-forest group-hover:text-gold flex items-center gap-1.5 transition-colors focus-visible:outline-gold min-h-[34px]"
                         >
-                          <span>Explore Destination</span>
-                          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+                          <span className="border-b border-forest/30 group-hover:border-gold pb-0.5 transition-colors">
+                            Explore Destination
+                          </span>
+                          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1 text-gold" />
                         </Link>
                         {tour.tag && (
                           <span className="text-[10px] uppercase tracking-wider text-charcoal-light hidden sm:inline-block max-w-[130px] truncate">

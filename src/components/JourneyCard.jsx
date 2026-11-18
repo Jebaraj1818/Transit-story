@@ -20,12 +20,12 @@ export default function JourneyCard({
 
   return (
     <article
-      className={`group flex flex-col bg-[#FCFAF5] border border-[#E3DCBF] rounded-sm overflow-hidden hover:border-earth/40 hover:shadow-[0_10px_30px_-6px_rgba(23,58,45,0.08)] transition-all duration-500 ${className}`}
+      className={`group flex flex-col bg-transparent overflow-hidden transition-all duration-300 ${className}`}
     >
       {/* Editorial Photography Framing */}
       <Link
         to={journeyHref}
-        className="relative aspect-[16/10] overflow-hidden block bg-forest/10 focus-visible:outline-gold"
+        className="relative aspect-[16/10] overflow-hidden rounded-sm block bg-forest/10 focus-visible:outline-gold shadow-sm"
         tabIndex={-1}
         aria-hidden="true"
       >
@@ -37,52 +37,54 @@ export default function JourneyCard({
         />
         {/* Category Tag */}
         {category && (
-          <span className="absolute top-4 left-4 bg-forest/90 backdrop-blur-sm text-ivory text-[10px] font-medium tracking-kicker uppercase px-3 py-1 rounded-sm border border-ivory/10">
+          <span className="absolute top-4 left-4 bg-forest-950/90 backdrop-blur-md text-ivory text-[10px] font-semibold tracking-kicker uppercase px-2.5 py-1 rounded-sm border border-gold/30 shadow-sm">
             {category}
           </span>
         )}
       </Link>
 
-      {/* Narrative & Details Area */}
-      <div className="flex flex-col flex-1 p-5 sm:p-7 md:p-8">
+      {/* Narrative & Details Area: Direct typography without card wrapper */}
+      <div className="flex flex-col flex-1 pt-4 pb-2">
         {/* Metadata: Location & Duration */}
-        <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs text-charcoal-muted/90 tracking-wide mb-3 font-sans">
+        <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs text-charcoal-muted/90 tracking-wide mb-2.5 font-sans">
           {location && (
             <div className="flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-earth flex-shrink-0" />
+              <MapPin className="w-3.5 h-3.5 text-gold flex-shrink-0" />
               <span>{location}</span>
             </div>
           )}
           {duration && (
             <div className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-earth flex-shrink-0" />
+              <Clock className="w-3.5 h-3.5 text-gold flex-shrink-0" />
               <span>{duration}</span>
             </div>
           )}
         </div>
 
-        {/* Title */}
-        <h3 className="font-serif text-2xl sm:text-[1.65rem] font-normal text-forest group-hover:text-forest-900 transition-colors leading-[1.22] mb-3">
+        {/* Title: Level 3 Destination Heading */}
+        <h3 className="font-serif text-xl sm:text-2xl lg:text-[1.65rem] font-medium text-forest group-hover:text-forest-900 transition-colors leading-[1.18] mb-2.5">
           <Link to={journeyHref} className="focus-visible:outline-gold">
             {title}
           </Link>
         </h3>
 
-        {/* Narrative Description */}
+        {/* Narrative Description: Level 5 Body */}
         {description && (
-          <p className="text-sm text-charcoal-muted leading-relaxed line-clamp-3 mb-6 flex-1 font-normal">
+          <p className="text-xs sm:text-[13.5px] text-charcoal-muted leading-relaxed line-clamp-3 mb-5 flex-1 font-normal">
             {description}
           </p>
         )}
 
         {/* Discover CTA Link */}
-        <div className="pt-4 border-t border-[#E8E1CD] mt-auto">
+        <div className="pt-3 border-t border-[#E8E1CD] mt-auto">
           <Link
             to={journeyHref}
-            className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-kicker text-forest group-hover:text-earth transition-colors focus-visible:outline-gold py-1 min-h-[36px]"
+            className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-editorial text-forest group-hover:text-gold transition-colors focus-visible:outline-gold py-1 min-h-[36px]"
           >
-            <span>Discover Journey</span>
-            <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1.5" />
+            <span className="border-b border-forest/30 group-hover:border-gold pb-0.5 transition-colors">
+              Discover Journey
+            </span>
+            <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1.5 text-gold" />
           </Link>
         </div>
       </div>

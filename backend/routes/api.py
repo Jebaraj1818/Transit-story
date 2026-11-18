@@ -5,7 +5,7 @@ from backend.db import db
 from backend.models import (
     Category, Destination, Service, FAQ, JourneyIdea,
     SiteSetting, Story, Enquiry, NewsletterSubscriber, destination_categories,
-    Testimonial
+    Testimonial, ensure_default_testimonials
 )
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -340,6 +340,7 @@ def get_testimonials():
     Ensures only active testimonials with valid non-empty image URLs are returned.
     """
     try:
+        ensure_default_testimonials()
         testimonials = Testimonial.query.filter_by(is_active=True).order_by(Testimonial.display_order.asc(), Testimonial.id.asc()).all()
         valid_list = [t.to_dict() for t in testimonials if t.image_url and t.image_url.strip()]
         resp = jsonify(valid_list)
